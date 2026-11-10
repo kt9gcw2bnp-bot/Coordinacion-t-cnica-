@@ -34,8 +34,15 @@ const HOJAS = {
                'Responsable', 'FechaIngreso', 'ConsecutivoBaja'],
   Movimientos: ['Consecutivo', 'Fecha', 'Tipo', 'Placa', 'Descripcion', 'Estado', 'DeUbicacion', 'AUbicacion', 'DeResponsable',
                 'AResponsable', 'Causal', 'Detalle', 'RegistradoPor', 'Registrado'],
-  Config: ['Clave', 'Valor']
+  Config: ['Clave', 'Valor'],
+  BitacoraEspacios: ['Id', 'Fecha', 'Hora', 'Espacio', 'Tipo', 'Prioridad', 'Descripcion', 'Placas', 'ReportadoPor', 'Estado',
+                     'Seguimiento', 'Actualizado', 'ActualizadoPor']
 };
+
+const EV_TIPOS = ['Daño de infraestructura', 'Falla eléctrica', 'Filtración o agua', 'Daño de mobiliario o equipo', 'Faltante de un bien',
+                  'Seguridad (ingreso, robo, cerraduras)', 'Limpieza o plagas', 'Conectividad o internet', 'Otro'];
+const EV_PRIORIDADES = ['Baja', 'Media', 'Alta'];
+const EV_ESTADOS = ['Abierta', 'En atención', 'Resuelta'];
 
 const ESTADOS = ['Bueno', 'Regular', 'Malo'];
 const MODOS = ['Ley 7372', 'Donación MEP', 'Donación', 'Fondos Propios', 'Llave en mano DIEE', 'Otro'];
@@ -66,7 +73,7 @@ function doPost(e) {
   try { body = JSON.parse(e.postData.contents); }
   catch (err) { return json({ ok: false, error: 'Solicitud inválida.' }); }
 
-  const lectura = ['sesion', 'invListar', 'invMovimientos', 'listarUsuarios'].indexOf(body.action) >= 0;
+  const lectura = ['sesion', 'invListar', 'invMovimientos', 'listarUsuarios', 'bitListar'].indexOf(body.action) >= 0;
   const lock = lectura ? null : LockService.getScriptLock();
   if (lock) lock.waitLock(15000);
   try {
@@ -86,6 +93,9 @@ function doPost(e) {
       case 'invAnularBaja':   return json(conSesion(body, u => invAnularBaja(u, body.datos || {}), true));
       case 'invEliminar':     return json(conSesion(body, u => invEliminar(u, body.datos || {}), true));
       case 'invCorregirPlaca':return json(conSesion(body, u => invCorregirPlaca(u, body.datos || {}), true));
+      case 'bitListar':       return json(conSesion(body, u => bitListar(u)));
+      case 'bitCrear':        return json(conSesion(body, u => bitCrear(u, body.datos || {})));
+      case 'bitSeguimiento':  return json(conSesion(body, u => bitSeguimiento(u, body.datos || {})));
       case 'invImportar':     return json(conSesion(body, u => invImportar(u, body.datos || {}), true));
       case 'cfgGuardar':      return json(conSesion(body, u => cfgGuardar(u, body.datos || {}), true));
       default:                return json({ ok: false, error: 'Acción no reconocida.' });
@@ -274,7 +284,7 @@ function invListar(u) {
   const todos = filas('Inventario').map(invPub);
   const items = veTodo(u) ? todos : todos.filter(i => i.Responsable === u.Correo);
   const res = {
-    ok: true, version: 6, esAdmin: esAdminU(u), veTodo: veTodo(u), yo: u.Correo,
+    ok: true, version: 7, esAdmin: esAdminU(u), veTodo: veTodo(u), yo: u.Correo,
     items: items, config: leerConfig(), nombres: nombresUsuarios(),
     catalogos: { estados: ESTADOS, modos: MODOS, causales: Object.keys(CAUSALES), requisitos: CAUSALES }
   };
@@ -604,6 +614,86 @@ function importarInventarioInicial() {
   if (matriz.length) { capacidad(h, matriz.length); h.getRange(h.getLastRow() + 1, 1, matriz.length, enc2.length).setValues(matriz); tocar(); }
   bitacora('', 'inv_importacion', nuevas.length + ' bienes');
   Logger.log('Importados: ' + nuevas.length + ' bienes.');
+}
+
+/* ============ BITÁCORA DE ESPACIOS FÍSICOS ============
+   Registro de eventualidades por aula, laboratorio o taller (Normas de Control Interno 4.3: protección del patrimonio). */
+function bitPub(r) {
+  const o = {};
+  HOJAS.BitacoraEspacios.forEach(c => { const v = r[c]; o[c] = v instanceof Date ? Utilities.formatDate(v, 'America/Costa_Rica', 'yyyy-MM-dd') : String(v == null ? '' : v); });
+  try { o.Seguimiento = JSON.parse(o.Seguimiento || '[]'); } catch (e) { o.Seguimiento = []; }
+  return o;
+}
+
+function bitEspaciosDe(u) {
+  const m = {};
+  filas('Inventario').forEach(r => { if (norm(r.Responsable) === u.Correo && r.Situacion !== 'Baja' && r.Ubicacion) m[String(r.Ubicacion).trim()] = true; });
+  return m;
+}
+
+function bitListar(u) {
+  let lista = filas('BitacoraEspacios').map(bitPub);
+  if (!veTodo(u)) { const esp = bitEspaciosDe(u); lista = lista.filter(e => e.ReportadoPor === u.Correo || esp[e.Espacio]); }
+  return { ok: true, esAdmin: esAdminU(u), yo: u.Correo, eventos: lista, nombres: nombresUsuarios(),
+    catalogos: { tipos: EV_TIPOS, prioridades: EV_PRIORIDADES, estados: EV_ESTADOS } };
+}
+
+function bitCrear(u, d) {
+  const espacio = txt(d.Espacio, 80), desc = txt(d.Descripcion, 1500);
+  if (!espacio) return { ok: false, error: 'Indique el espacio (aula, laboratorio o taller).' };
+  if (EV_TIPOS.indexOf(d.Tipo) < 0) return { ok: false, error: 'Seleccione el tipo de eventualidad.' };
+  if (EV_PRIORIDADES.indexOf(d.Prioridad) < 0) return { ok: false, error: 'Seleccione la prioridad.' };
+  if (desc.length < 10) return { ok: false, error: 'Describa la eventualidad (mínimo 10 caracteres).' };
+  if (!fechaOk(d.Fecha)) return { ok: false, error: 'Indique la fecha.' };
+  const placas = String(d.Placas || '').split(/[\s,;]+/).map(p => p.trim()).filter(p => /^\d{4}-\d{1,6}$/.test(p));
+  const anio = String(d.Fecha).slice(0, 4), base = 'EV-' + anio + '-';
+  let max = 0; filas('BitacoraEspacios').forEach(r => { const c = String(r.Id); if (c.indexOf(base) === 0) max = Math.max(max, Number(c.slice(base.length)) || 0); });
+  const o = { Id: base + ('000' + (max + 1)).slice(-4), Fecha: d.Fecha, Hora: txt(d.Hora, 5) || Utilities.formatDate(new Date(), 'America/Costa_Rica', 'HH:mm'),
+    Espacio: espacio, Tipo: d.Tipo, Prioridad: d.Prioridad, Descripcion: desc, Placas: placas.join(', '), ReportadoPor: u.Correo,
+    Estado: 'Abierta', Seguimiento: '[]', Actualizado: ahoraCR(), ActualizadoPor: u.Correo };
+  const h = hoja('BitacoraEspacios'), enc = encab('BitacoraEspacios');
+  capacidad(h, 1);
+  h.getRange(h.getLastRow() + 1, 1, 1, enc.length).setValues([enc.map(c => String(o[c] == null ? '' : o[c]))]);
+  tocar();
+  bitacora(u.Correo, 'bitacora_espacio', o.Id + ' · ' + espacio + ' · ' + o.Prioridad);
+  if (o.Prioridad === 'Alta') avisarAdmins(o, u);
+  return { ok: true, evento: bitPub(o) };
+}
+
+function bitSeguimiento(u, d) {
+  const r = filas('BitacoraEspacios').find(x => String(x.Id) === txt(d.Id, 20));
+  if (!r) return { ok: false, error: 'No se encontró la anotación.' };
+  const o = bitPub(r);
+  const esAutor = o.ReportadoPor === u.Correo;
+  if (!esAdminU(u) && !esAutor && !bitEspaciosDe(u)[o.Espacio]) return { ok: false, error: 'Sin permiso sobre esta anotación.' };
+  const nota = txt(d.Nota, 1000);
+  const nuevoEstado = EV_ESTADOS.indexOf(d.Estado) >= 0 ? d.Estado : o.Estado;
+  if (nuevoEstado !== o.Estado && !esAdminU(u)) return { ok: false, error: 'Solo la administración puede cambiar el estado.' };
+  if (!nota && nuevoEstado === o.Estado) return { ok: false, error: 'Escriba una nota o cambie el estado.' };
+  if (nuevoEstado === 'Resuelta' && !nota) return { ok: false, error: 'Indique cómo se resolvió.' };
+  o.Seguimiento.push({ f: ahoraCR(), p: u.Correo, n: nota, e: nuevoEstado !== o.Estado ? nuevoEstado : '' });
+  o.Estado = nuevoEstado; o.Actualizado = ahoraCR(); o.ActualizadoPor = u.Correo;
+  const enc = encab('BitacoraEspacios');
+  hoja('BitacoraEspacios').getRange(r._fila, 1, 1, enc.length)
+    .setValues([enc.map(c => c === 'Seguimiento' ? JSON.stringify(o.Seguimiento) : String(o[c] == null ? '' : o[c]))]);
+  tocar();
+  bitacora(u.Correo, 'bitacora_seguimiento', o.Id + ' · ' + o.Estado);
+  return { ok: true, evento: o };
+}
+
+function avisarAdmins(o, u) {
+  try {
+    const admins = filas('Usuarios').filter(r => r.Rol === 'Administrador' && r.Activo === 'SI').map(r => norm(r.Correo)).filter(c => c !== u.Correo);
+    if (!admins.length) return;
+    MailApp.sendEmail({
+      to: admins.join(','), subject: 'Eventualidad de prioridad alta · ' + o.Espacio + ' · ' + o.Id,
+      htmlBody: '<div style="font-family:Segoe UI,Arial,sans-serif;max-width:520px;border:1px solid #D5DCE6">' +
+        '<div style="background:#0B2A55;color:#fff;padding:14px 18px;border-bottom:4px solid #C9A227"><b>Bitácora de espacios · ' + escapar(o.Id) + '</b></div>' +
+        '<div style="padding:18px;color:#1B2635"><b>Espacio:</b> ' + escapar(o.Espacio) + '<br><b>Tipo:</b> ' + escapar(o.Tipo) +
+        '<br><b>Reportó:</b> ' + escapar(u.Nombre) + '<br><b>Fecha:</b> ' + escapar(o.Fecha) + ' ' + escapar(o.Hora) +
+        '<p>' + escapar(o.Descripcion) + '</p>' + (o.Placas ? '<b>Bienes:</b> ' + escapar(o.Placas) : '') + '</div></div>'
+    });
+  } catch (e) { bitacora(u.Correo, 'aviso_fallido', String(e)); }
 }
 
 /* ============ UTILIDADES ============ */

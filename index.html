@@ -33,8 +33,8 @@ button{font-family:inherit;cursor:pointer}
 .tarjeta h2{font-size:20px;color:var(--navy);margin-bottom:6px}
 .tarjeta p.sub{color:var(--suave);font-size:14px;margin-bottom:24px;line-height:1.45}
 label{display:block;font-size:13px;font-weight:600;margin-bottom:6px;color:var(--texto)}
-input,select{width:100%;padding:11px 12px;border:1px solid var(--borde);border-radius:4px;font-size:15px;font-family:inherit;background:#fff;color:var(--texto)}
-input:focus,select:focus{outline:2px solid var(--navy2);outline-offset:0;border-color:var(--navy2)}
+input,select,textarea{width:100%;padding:11px 12px;border:1px solid var(--borde);border-radius:4px;font-size:15px;font-family:inherit;background:#fff;color:var(--texto)}
+input:focus,select:focus,textarea:focus{outline:2px solid var(--navy2);outline-offset:0;border-color:var(--navy2)}
 .codigo{font-size:26px;letter-spacing:10px;text-align:center;font-weight:600}
 .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;background:var(--navy);color:#fff;border:none;border-radius:4px;padding:12px 18px;font-size:15px;font-weight:600;width:100%;margin-top:16px}
 .btn:hover{background:var(--navy2)}
@@ -150,12 +150,20 @@ input:disabled,select:disabled{background:#F4F6F9;color:var(--texto)}
 .linea{list-style:none;border-left:2px solid var(--borde);margin-left:6px}
 .linea li{position:relative;padding:0 0 12px 16px;font-size:13px}
 .linea li::before{content:'';position:absolute;left:-6px;top:4px;width:10px;height:10px;border-radius:50%;background:var(--oro)}
-.linea .lt{display:inline-block;min-width:84px;color:var(--suave)}.linea .ld{color:var(--texto);margin-top:2px;padding-left:84px}.linea .ld.tenue{color:#8A94A6;font-size:12px}
+.linea .lt{display:inline-block;min-width:84px;margin-right:8px;color:var(--suave)}.linea .ld{color:var(--texto);margin-top:2px;padding-left:84px}.linea .ld.tenue{color:#8A94A6;font-size:12px}
 .tabla-wrap.mini{max-height:220px;overflow:auto;border:1px solid var(--borde);border-radius:4px}.tabla-wrap.mini table{font-size:12.5px}
 .modal-pie{flex-wrap:wrap}
 
 .btn-borrar{background:#fff;color:#B42318;border:1px solid #E7A39A}.btn-borrar:hover{background:#FDECEA}
 .barra-sel .btn.btn-borrar{background:#fff;color:#B42318}
+.nav-item .contador{margin-left:auto;background:#B42318;color:#fff;font-size:11px;font-weight:700;border-radius:10px;padding:1px 7px}
+.aviso-bit{display:flex;align-items:center;gap:8px;flex-wrap:wrap;background:#FFF6F5;border:1px solid #F4C7C1;border-left:4px solid #B42318;border-radius:6px;padding:12px 16px;margin-bottom:18px;cursor:pointer;font-size:14px}
+.est.abierta{background:#FDECEA;color:#B42318}
+.tbit td:nth-child(6){min-width:260px}.tbit td:nth-child(7){min-width:110px}
+textarea{resize:vertical;min-height:90px;line-height:1.45}
+.ev-cab{display:flex;gap:8px;align-items:center;margin-bottom:12px}.ev-datos{margin-bottom:12px}
+.ev-desc{font-size:14.5px;line-height:1.55;background:#F7F9FC;border:1px solid var(--borde);border-radius:6px;padding:12px 14px;white-space:pre-wrap}
+button.chip{cursor:pointer;font-family:inherit}
 .sincro{font-size:12px;font-weight:400;color:var(--suave);margin-left:8px}
 .barra-sel.vacia{background:#EEF3FB;color:var(--navy);border:1px dashed #9DB2D3;font-size:13px}.barra-sel.vacia b{margin:0}
 .zona-archivo{display:flex;flex-direction:column;align-items:center;gap:4px;border:2px dashed #9DB2D3;border-radius:8px;padding:22px;margin:14px 0;background:#F7F9FC;cursor:pointer;text-align:center}
@@ -295,12 +303,14 @@ const IC = {
   sol:'<svg viewBox="0 0 24 24"><path d="M4 4h16v12H8l-4 4z"/></svg>',
   doc:'<svg viewBox="0 0 24 24"><path d="M6 2h9l5 5v15H6z"/><path d="M14 2v6h6M9 13h8M9 17h8"/></svg>',
   mis:'<svg viewBox="0 0 24 24"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 8h8M8 12h8M8 16h5"/></svg>',
+  bit:'<svg viewBox="0 0 24 24"><path d="M5 3h11l3 3v15H5z"/><path d="M9 8h6M9 12h6M9 16h4"/><circle cx="18" cy="18" r="3.2" fill="currentColor" stroke="none" opacity=".0"/></svg>',
   usr:'<svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="4"/><path d="M2 21a7 7 0 0 1 14 0M17 11h6M20 8v6"/></svg>'
 };
 
 const MODULOS = [
   {id:'inicio', nombre:'Inicio', icono:IC.inicio},
   {id:'misbienes', nombre:'Mis bienes', icono:IC.mis, listo:true, desc:'Bienes asignados a su custodia, su estado, reporte de novedades y su inventario en PDF.'},
+  {id:'bitacora', nombre:'Bitácora de espacios', icono:IC.bit, listo:true, desc:'Anote eventualidades en aulas, laboratorios y talleres; la administración les da seguimiento hasta resolverlas.'},
   {id:'especialidades', nombre:'Especialidades', icono:IC.esp, gestion:true, desc:'Ficha de cada especialidad: docentes, grupos, matrícula y estado de talleres y laboratorios.'},
   {id:'inventario', nombre:'Inventario', icono:IC.inv, listo:true, gestion:true, desc:'Inventario institucional: traslados, bajas por causal, actas, certificaciones y exportación en formato MEP.'},
   {id:'ley7372', nombre:'Ley 7372', icono:IC.ley, gestion:true, desc:'Plan de inversión y seguimiento de cada compra: solicitada, aprobada, adjudicada, recibida y pagada.'},
@@ -404,6 +414,7 @@ $('btnSalir').addEventListener('click', async ()=>{
 function cerrarLocal(){
   sesion={token:null,usuario:null}; guardar('ct_token',null);
   if(typeof borrarCacheInv==='function') borrarCacheInv();
+  if(typeof BIT!=='undefined'){ BIT.eventos=[]; BIT.cargado=false; }
   $('vistaApp').classList.add('oculto'); $('barraUsuario').classList.add('oculto');
   $('vistaLogin').classList.remove('oculto');
   $('paso2').classList.add('oculto'); $('paso1').classList.remove('oculto');
@@ -417,6 +428,7 @@ function entrar(){
   $('uRol').textContent = sesion.usuario.rol;
   pintarMenu(); ir('inicio');
   cargarInv().catch(()=>{});  // precarga en segundo plano
+  cargarBit().catch(()=>{});
 }
 
 function esAdmin(){ return sesion.usuario && sesion.usuario.rol==='Administrador'; }
@@ -439,6 +451,7 @@ function ir(id){
   if(id==='usuarios') return vistaUsuarios(c);
   if(id==='inventario') return vistaInventario(c);
   if(id==='misbienes') return vistaMisBienes(c);
+  if(id==='bitacora') return vistaBitacora(c);
   const mod = MODULOS.find(x=>x.id===id);
   c.innerHTML = `<div class="encabezado"><h2>${mod.nombre}</h2><p>${mod.desc}</p></div>
     <div class="panel"><span class="estado">En construcción</span><p style="margin-top:12px;color:var(--suave);font-size:14px">Este módulo se habilitará en la siguiente etapa del proyecto.</p></div>`;
@@ -449,10 +462,12 @@ function vistaInicio(c){
   const saludo = h<12?'Buenos días':h<18?'Buenas tardes':'Buenas noches';
   c.innerHTML = `<div class="encabezado"><h2>${saludo}, ${esc(sesion.usuario.nombre.split(' ')[0])}</h2>
     <p>${esc(INSTITUCION)} · Panel de la Coordinación Técnica</p></div>
+    <div id="avisoBitInicio"></div>
     <div class="grid">${modulosVisibles().filter(x=>x.desc).map(x=>`
       <div class="mod" style="cursor:pointer" onclick="ir('${x.id}')"><h3>${x.nombre}</h3><p>${x.desc}</p><span class="estado ${x.listo?'listo':''}">${x.listo?'Disponible':'En construcción'}</span></div>`).join('')}
       ${esAdmin()?`<div class="mod"><h3>Usuarios</h3><p>Autorice o retire el acceso de docentes, Dirección, Junta y Contabilidad.</p><span class="estado listo">Disponible</span></div>`:''}
     </div>`;
+  if(typeof actualizarContadorBit==='function' && BIT.cargado) actualizarContadorBit();
 }
 
 async function vistaUsuarios(c){
@@ -616,7 +631,7 @@ function pintarInventario(){
     <button class="btn btn-auto btn-sec" id="btnExportar">Exportar a Excel</button>`;
   const resps = [...new Set(INV.items.map(i=>i.Responsable).filter(Boolean))].map(c=>[c,nombreDe(c)]).sort((a,b)=>a[1].localeCompare(b[1]));
   $('invCuerpo').innerHTML = `
-    ${INV.version<6?'<div class="msg err" style="margin:0 0 16px">El servidor (Apps Script) tiene una versión anterior del código: los traslados, las bajas y la importación no van a funcionar. Pegue el código nuevo y publique una <b>Nueva versión</b> en Implementar → Gestionar implementaciones.</div>':''}
+    ${INV.version<7?'<div class="msg err" style="margin:0 0 16px">El servidor (Apps Script) tiene una versión anterior del código: los traslados, las bajas y la importación no van a funcionar. Pegue el código nuevo y publique una <b>Nueva versión</b> en Implementar → Gestionar implementaciones.</div>':''}
     <div class="kpis">${kpisHtml(act,'Bienes activos')}<div class="kpi baja"><span>Dados de baja</span><b>${INV.items.length-act.length}</b></div></div>
     <div class="panel">
       <div class="barra">
@@ -751,6 +766,7 @@ function abrirBien(item, desdeMis){
     ${!nuevo?'<div class="historial"><h4>Historial de movimientos</h4><div id="histMov">Cargando…</div></div>':''}`;
   const pie = `
     ${INV.esAdmin && !nuevo && !baja && !desdeMis ? '<button class="btn btn-auto btn-sec" id="fTras">Trasladar / asignar</button><button class="btn btn-auto btn-sec" id="fPlaca">Corregir placa</button><button class="btn btn-auto btn-sec btn-borrar" id="fEliminar">Eliminar registro</button><button class="btn btn-auto btn-peligro" id="fBaja">Dar de baja</button>':''}
+    ${!nuevo && !baja ? '<button class="btn btn-auto btn-sec" id="fEv">Anotar eventualidad</button>':''}
     ${baja ? '<button class="btn btn-auto btn-sec" id="fActa">Acta de baja (PDF)</button><button class="btn btn-auto btn-sec" id="fCert">Certificación (PDF)</button>':''}
     ${INV.esAdmin && baja ? '<button class="btn btn-auto btn-sec" id="fAnular">Anular baja</button>':''}
     ${editable?`<button class="btn btn-auto" id="btnGuardarBien">${nuevo?'Registrar':'Guardar cambios'}</button>`:''}`;
@@ -759,6 +775,7 @@ function abrirBien(item, desdeMis){
   if($('fTras')) $('fTras').onclick = ()=>{ m.remove(); formTraslado([i]); };
   if($('fBaja')) $('fBaja').onclick = ()=>{ m.remove(); formBaja([i]); };
   if($('fPlaca')) $('fPlaca').onclick = ()=>formCorregirPlaca(i);
+  if($('fEv')) $('fEv').onclick = ()=>{ m.remove(); formEventualidad({Espacio:i.Ubicacion, Placas:i.Placa}); };
   if($('fEliminar')) $('fEliminar').onclick = ()=>formEliminar([i]);
   if($('fActa')) $('fActa').onclick = ()=>docBaja(i.ConsecutivoBaja,'acta');
   if($('fCert')) $('fCert').onclick = ()=>docBaja(i.ConsecutivoBaja,'cert');
@@ -977,7 +994,8 @@ function abrirConfig(){
 /* ---------- Mis bienes (perfil del funcionario) ---------- */
 async function vistaMisBienes(c){
   c.innerHTML = `<div class="encabezado fila-enc"><div><h2>Mis bienes <span id="sincro" class="sincro"></span></h2><p>Bienes institucionales asignados a su custodia.</p></div>
-    <div class="enc-acciones"><button class="btn btn-auto" id="btnMiPdf" disabled>Descargar mi inventario (PDF)</button></div></div><div id="misCuerpo"><div class="panel">Cargando…</div></div>`;
+    <div class="enc-acciones"><button class="btn btn-auto btn-sec" id="btnMiEv">Anotar eventualidad</button><button class="btn btn-auto" id="btnMiPdf" disabled>Descargar mi inventario (PDF)</button></div></div><div id="misCuerpo"><div class="panel">Cargando…</div></div>`;
+  $('btnMiEv').onclick = ()=>{ const u=[...new Set(INV.items.filter(i=>i.Responsable===INV.yo&&i.Situacion==='Activo').map(i=>i.Ubicacion))]; formEventualidad({Espacio:u.length===1?u[0]:''}); };
   if(restaurarInv()){ pintarMisBienes(); actualizarEnFondo(); return; }
   try{ await cargarInv(); pintarMisBienes(); }
   catch(e){ $('misCuerpo').innerHTML = `<div class="panel">${esc(e.message||'No se pudo cargar.')}</div>`; }
@@ -1131,6 +1149,187 @@ function docCertInventario(lista){
     + firmas([['Coordinación Técnica', c.CoordinadorTecnico], ['Dirección del centro educativo', c.Director]])
     + `<p class="d-nota">Fundamento: ${FUNDAMENTO}</p>`;
   abrirDoc('Certificación de inventario', html);
+}
+
+/* =========================================================
+   BITÁCORA DE ESPACIOS FÍSICOS
+   ========================================================= */
+const BIT = {eventos:[], cat:{tipos:[],prioridades:[],estados:[]}, esAdmin:false, yo:'', nombres:{}, cargado:false,
+  f:{q:'', espacio:'', tipo:'', prioridad:'', estado:'Pendientes'}};
+let _cargaBit = null;
+
+function cargarBit(){
+  if(_cargaBit) return _cargaBit;
+  _cargaBit = api('bitListar').then(r=>{
+    _cargaBit = null;
+    if(!r.ok) throw new Error(r.error);
+    Object.assign(BIT, {eventos:r.eventos, cat:r.catalogos, esAdmin:r.esAdmin, yo:r.yo, cargado:true});
+    Object.assign(INV.nombres, r.nombres||{});
+    actualizarContadorBit();
+    return r;
+  }, e=>{ _cargaBit = null; throw e; });
+  return _cargaBit;
+}
+
+function pendientesBit(){ return BIT.eventos.filter(e=>e.Estado!=='Resuelta'); }
+function actualizarContadorBit(){
+  const n = pendientesBit().length, b = document.querySelector('.nav-item[data-id=bitacora]');
+  if(!b) return;
+  let s = b.querySelector('.contador'); if(!s){ s=document.createElement('span'); s.className='contador'; b.appendChild(s); }
+  s.textContent = n; s.classList.toggle('oculto', !n);
+  const ini = $('avisoBitInicio');
+  if(ini){ const altas = pendientesBit().filter(e=>e.Prioridad==='Alta').length;
+    ini.innerHTML = n ? `<div class="aviso-bit" onclick="ir('bitacora')"><b>${n} eventualidad${n===1?'':'es'} pendiente${n===1?'':'s'}</b> en la bitácora de espacios${altas?` · <span class="est malo">${altas} de prioridad alta</span>`:''}<span class="flex1"></span>Ver →</div>` : ''; }
+}
+
+const badgePrioridad = p => `<span class="est ${p==='Alta'?'malo':p==='Media'?'regular':'sin'}">${esc(p)}</span>`;
+const badgeEvEstado = e => `<span class="est ${e==='Resuelta'?'bueno':e==='En atención'?'regular':'abierta'}">${esc(e)}</span>`;
+
+function espaciosConocidos(){
+  return [...new Set([...BIT.eventos.map(e=>e.Espacio), ...INV.items.filter(i=>i.Situacion==='Activo').map(i=>i.Ubicacion)].filter(Boolean))]
+    .sort((a,b)=>a.localeCompare(b,'es',{numeric:true}));
+}
+
+async function vistaBitacora(c){
+  c.innerHTML = `<div class="encabezado fila-enc"><div><h2>Bitácora de espacios <span id="sincro" class="sincro"></span></h2>
+    <p>Eventualidades en aulas, laboratorios y talleres: anótelas en el momento y dé seguimiento hasta resolverlas.</p></div>
+    <div class="enc-acciones"><button class="btn btn-auto" id="btnEv">+ Anotar eventualidad</button><button class="btn btn-auto btn-sec" id="btnBitPdf">Imprimir bitácora (PDF)</button></div></div>
+    <div id="bitCuerpo"><div class="panel">Cargando bitácora…</div></div>`;
+  $('btnEv').onclick = ()=>formEventualidad({});
+  $('btnBitPdf').onclick = ()=>docBitacora(bitFiltrados());
+  if(!INV.cargadoEn) restaurarInv();
+  if(BIT.cargado){ pintarBitacora(); $('sincro').textContent='Actualizando…'; cargarBit().then(()=>{ if($('bitCuerpo')) pintarBitacora(); }).catch(()=>{}).finally(()=>{ if($('sincro')) $('sincro').textContent=''; }); return; }
+  try{ await cargarBit(); pintarBitacora(); }
+  catch(e){ $('bitCuerpo').innerHTML = `<div class="panel">${esc(e.message||'No se pudo cargar la bitácora.')}</div>`; }
+}
+
+function bitFiltrados(){
+  const f=BIT.f, q=f.q.trim().toLowerCase();
+  return BIT.eventos.filter(e=>
+    (f.estado==='Todas' || (f.estado==='Pendientes' ? e.Estado!=='Resuelta' : e.Estado===f.estado)) &&
+    (!f.espacio || e.Espacio===f.espacio) && (!f.tipo || e.Tipo===f.tipo) && (!f.prioridad || e.Prioridad===f.prioridad) &&
+    (!q || [e.Id,e.Espacio,e.Tipo,e.Descripcion,e.Placas,nombreDe(e.ReportadoPor)].join(' ').toLowerCase().includes(q))
+  ).sort((a,b)=>(b.Fecha+b.Hora).localeCompare(a.Fecha+a.Hora));
+}
+
+function pintarBitacora(){
+  const f=BIT.f, ev=BIT.eventos, cnt=k=>ev.filter(e=>e.Estado===k).length;
+  const altas = ev.filter(e=>e.Estado!=='Resuelta' && e.Prioridad==='Alta').length;
+  $('bitCuerpo').innerHTML = `
+    <div class="kpis kpis4">
+      <div class="kpi malo"><span>Abiertas</span><b>${cnt('Abierta')}</b></div>
+      <div class="kpi regular"><span>En atención</span><b>${cnt('En atención')}</b></div>
+      <div class="kpi"><span>Pendientes de prioridad alta</span><b>${altas}</b></div>
+      <div class="kpi bueno"><span>Resueltas</span><b>${cnt('Resuelta')}</b></div>
+    </div>
+    <div class="panel">
+      <div class="barra">
+        <input id="bQ" placeholder="Buscar en la bitácora…" value="${esc(f.q)}">
+        <select id="bEsp">${opciones([...new Set(ev.map(e=>e.Espacio))].sort((a,b)=>a.localeCompare(b,'es',{numeric:true})), f.espacio, 'Todos los espacios')}</select>
+        <select id="bTipo">${opciones(BIT.cat.tipos, f.tipo, 'Todos los tipos')}</select>
+        <select id="bPrio">${opciones(BIT.cat.prioridades, f.prioridad, 'Toda prioridad')}</select>
+        <div class="segment" id="bEst">${['Pendientes','Resuelta','Todas'].map(s=>`<button type="button" data-s="${s}" class="${f.estado===s?'on':''}">${s==='Resuelta'?'Resueltas':s}</button>`).join('')}</div>
+      </div>
+      <div class="barra acciones"><span class="conteo" id="bConteo"></span></div>
+      <div class="tabla-wrap" id="bTabla"></div>
+    </div>`;
+  $('bQ').addEventListener('input', e=>{ f.q=e.target.value; clearTimeout(BIT.tq); BIT.tq=setTimeout(pintarTablaBit,160); });
+  [['bEsp','espacio'],['bTipo','tipo'],['bPrio','prioridad']].forEach(([id,k])=>$(id).onchange=e=>{ f[k]=e.target.value; pintarTablaBit(); });
+  $('bEst').querySelectorAll('button').forEach(b=>b.onclick=()=>{ f.estado=b.dataset.s; pintarBitacora(); });
+  pintarTablaBit();
+}
+
+function pintarTablaBit(){
+  const lista = bitFiltrados();
+  $('bConteo').textContent = lista.length + ' anotaci' + (lista.length===1?'ón':'ones');
+  $('bTabla').innerHTML = lista.length ? `<table class="tinv tbit"><thead><tr><th>N.°</th><th>Fecha</th><th>Espacio</th><th>Tipo</th><th>Prioridad</th><th>Descripción</th><th>Reportó</th><th>Estado</th></tr></thead><tbody>
+    ${lista.map(e=>`<tr data-id="${esc(e.Id)}"><td class="placa">${esc(e.Id)}</td><td style="white-space:nowrap">${esc(fechaCR(e.Fecha))}<br><small class="tenue">${esc(e.Hora)}</small></td>
+      <td><b>${esc(e.Espacio)}</b></td><td>${esc(e.Tipo)}</td><td>${badgePrioridad(e.Prioridad)}</td>
+      <td>${esc(e.Descripcion.length>110?e.Descripcion.slice(0,110)+'…':e.Descripcion)}${e.Seguimiento.length?`<br><small class="tenue">${e.Seguimiento.length} seguimiento${e.Seguimiento.length===1?'':'s'}</small>`:''}</td>
+      <td>${esc(nombreDe(e.ReportadoPor))}</td><td>${badgeEvEstado(e.Estado)}</td></tr>`).join('')}</tbody></table>`
+    : `<p class="vacio">${BIT.eventos.length?'No hay anotaciones con esos filtros.':'Todavía no hay anotaciones. Use “+ Anotar eventualidad” cuando ocurra algo en un espacio.'}</p>`;
+  $('bTabla').querySelectorAll('tbody tr').forEach(tr=>tr.onclick=()=>detalleEvento(BIT.eventos.find(e=>e.Id===tr.dataset.id)));
+}
+
+/* Anotar una eventualidad (desde la bitácora, la ficha de un bien o Mis bienes) */
+async function formEventualidad(pref){
+  if(!BIT.cargado){ try{ await cargarBit(); }catch(e){ return aviso('No se pudo abrir la bitácora.'); } }
+  const ahora=new Date(), hora=ahora.toTimeString().slice(0,5);
+  const m = modal('modalEv','Anotar eventualidad', `
+    <div class="grid-form">
+      <div><label>Fecha</label><input type="date" id="evFecha" value="${hoyISO()}"></div>
+      <div><label>Hora</label><input type="time" id="evHora" value="${hora}"></div>
+      <div><label>Espacio</label><input id="evEsp" list="dlEsp2" value="${esc(pref.Espacio||'')}" placeholder="Ej. Aula 18, Laboratorio 2"></div>
+      <div class="ancho2"><label>Tipo</label><select id="evTipo">${opciones(BIT.cat.tipos,'','Seleccione…')}</select></div>
+      <div><label>Prioridad</label><div class="radios">${BIT.cat.prioridades.map(p=>`<label class="radio ${p==='Alta'?'malo':p==='Media'?'regular':'bueno'}"><input type="radio" name="evPrio" value="${p}" ${p==='Media'?'checked':''}> ${p}</label>`).join('')}</div></div>
+      <div class="ancho3"><label>¿Qué ocurrió?</label><textarea id="evDesc" rows="4" placeholder="Describa lo que encontró, desde cuándo y si afecta las lecciones"></textarea></div>
+      <div class="ancho3"><label>Bienes afectados (placas, opcional)</label><input id="evPlacas" value="${esc(pref.Placas||'')}" placeholder="Ej. 6526-0473, 6526-0474"></div>
+      <datalist id="dlEsp2">${espaciosConocidos().map(x=>`<option value="${esc(x)}">`).join('')}</datalist>
+    </div>
+    <p class="nota">Las anotaciones de prioridad <b>Alta</b> se avisan por correo a la Coordinación Técnica.</p>`,
+    '<button class="btn btn-auto" id="btnEvOk">Guardar anotación</button>', 760);
+  (pref.Espacio?$('evTipo'):$('evEsp')).focus();
+  $('btnEvOk').onclick = async ()=>{
+    const pr=document.querySelector('input[name=evPrio]:checked');
+    const datos={Fecha:$('evFecha').value, Hora:$('evHora').value, Espacio:$('evEsp').value.trim(), Tipo:$('evTipo').value,
+      Prioridad:pr?pr.value:'', Descripcion:$('evDesc').value.trim(), Placas:$('evPlacas').value.trim()};
+    if(!datos.Espacio) return m.msg('Indique el espacio.','err');
+    if(!datos.Tipo) return m.msg('Seleccione el tipo de eventualidad.','err');
+    if(datos.Descripcion.length<10) return m.msg('Describa la eventualidad (mínimo 10 caracteres).','err');
+    const b=$('btnEvOk'); cargando(b,true);
+    try{
+      const r=await api('bitCrear',{datos});
+      if(!r.ok){ m.msg(r.error,'err'); cargando(b,false,'Guardar anotación'); return; }
+      BIT.eventos.push(r.evento); actualizarContadorBit(); m.remove();
+      if($('bitCuerpo')) pintarBitacora();
+      aviso('Eventualidad anotada: '+r.evento.Id);
+    }catch(e){ m.msg('No se pudo conectar con el servidor.','err'); cargando(b,false,'Guardar anotación'); }
+  };
+}
+
+function detalleEvento(e){
+  const puedeEstado = BIT.esAdmin;
+  const placas = e.Placas ? e.Placas.split(/,\s*/) : [];
+  const seg = e.Seguimiento.length ? `<ul class="linea">${e.Seguimiento.map(s=>`<li><span class="lt">${esc(fechaCR(s.f))} ${esc(String(s.f).slice(11))}</span><b>${esc(nombreDe(s.p))}</b>${s.e?` · cambió a ${badgeEvEstado(s.e)}`:''}${s.n?`<div class="ld">${esc(s.n)}</div>`:''}</li>`).join('')}</ul>` : '<p class="nota">Sin seguimiento todavía.</p>';
+  const m = modal('modalEvD', `${esc(e.Id)} · ${esc(e.Espacio)}`, `
+    <div class="ev-cab">${badgeEvEstado(e.Estado)} ${badgePrioridad(e.Prioridad)} <span class="tenue">${esc(e.Tipo)}</span></div>
+    <table class="d-datos ev-datos"><tr><td>Fecha y hora</td><td>${esc(fechaCR(e.Fecha))} ${esc(e.Hora)}</td><td>Reportó</td><td>${esc(nombreDe(e.ReportadoPor))}</td></tr></table>
+    <p class="ev-desc">${esc(e.Descripcion)}</p>
+    ${placas.length?`<div class="chips">${placas.map(p=>`<button class="chip ok" data-pl="${esc(p)}">${esc(p)}${(INV.items.find(i=>i.Placa===p)||{}).Descripcion?' · '+esc(INV.items.find(i=>i.Placa===p).Descripcion):''}</button>`).join('')}</div>`:''}
+    <div class="historial"><h4>Seguimiento</h4>${seg}</div>
+    ${e.Estado!=='Resuelta'||puedeEstado?`<div class="caja-reporte"><h4>Agregar seguimiento</h4>
+      <div class="grid-form">${puedeEstado?`<div><label>Estado</label><select id="sEst">${opciones(BIT.cat.estados,e.Estado)}</select></div>`:''}
+      <div class="${puedeEstado?'ancho2':'ancho3'}"><label>Nota</label><input id="sNota" placeholder="${puedeEstado?'Ej. se reportó a la Junta; el electricista viene el lunes':'Ej. el problema continúa'}"></div></div>
+      <button class="btn btn-auto" id="btnSeg" type="button">Registrar</button></div>`:''}`,
+    '', 760);
+  m.querySelectorAll('[data-pl]').forEach(b=>b.onclick=()=>{ const it=INV.items.find(i=>i.Placa===b.dataset.pl); if(it){ abrirBien(it, !INV.veTodo); } else aviso('La placa '+b.dataset.pl+' no está entre sus bienes visibles.'); });
+  if($('btnSeg')) $('btnSeg').onclick = async ()=>{
+    const datos={Id:e.Id, Nota:$('sNota').value.trim(), Estado:$('sEst')?$('sEst').value:e.Estado};
+    if(!datos.Nota && datos.Estado===e.Estado) return m.msg('Escriba una nota o cambie el estado.','err');
+    if(datos.Estado==='Resuelta' && !datos.Nota) return m.msg('Indique cómo se resolvió.','err');
+    const b=$('btnSeg'); cargando(b,true);
+    try{
+      const r=await api('bitSeguimiento',{datos});
+      if(!r.ok){ m.msg(r.error,'err'); cargando(b,false,'Registrar'); return; }
+      const k=BIT.eventos.findIndex(x=>x.Id===e.Id); BIT.eventos[k]=r.evento; actualizarContadorBit();
+      m.remove(); if($('bitCuerpo')) pintarBitacora(); detalleEvento(r.evento); aviso('Seguimiento registrado');
+    }catch(err){ m.msg('No se pudo conectar con el servidor.','err'); cargando(b,false,'Registrar'); }
+  };
+}
+
+function docBitacora(lista){
+  if(!lista.length) return aviso('No hay anotaciones en la vista actual.');
+  const c=INV.config||{}, f=BIT.f;
+  const alcance=[f.espacio&&('espacio '+f.espacio), f.tipo, f.prioridad&&('prioridad '+f.prioridad), f.estado!=='Todas'&&(f.estado==='Pendientes'?'pendientes':'resueltas')].filter(Boolean).join(' · ')||'todas las anotaciones';
+  const html = encabezadoDoc('Bitácora de espacios físicos', `Alcance: ${esc(alcance)} · Fecha de emisión: ${esc(fechaCR(hoyISO()))}`)
+    + tablaDoc(['N.°','Fecha','Espacio','Tipo','Prioridad','Descripción','Reportó','Estado','Último seguimiento'],
+      lista.slice().reverse().map(e=>{ const u=e.Seguimiento[e.Seguimiento.length-1];
+        return [`<b>${esc(e.Id)}</b>`, esc(fechaCR(e.Fecha))+' '+esc(e.Hora), esc(e.Espacio), esc(e.Tipo), esc(e.Prioridad), esc(e.Descripcion)+(e.Placas?`<br><i>Bienes: ${esc(e.Placas)}</i>`:''),
+          esc(nombreDe(e.ReportadoPor)), esc(e.Estado), u?esc(fechaCR(u.f))+': '+esc(u.n||('Estado: '+u.e)):'—']; }))
+    + `<p class="d-p">Total de anotaciones: <b>${lista.length}</b>.</p>`
+    + firmas([['Coordinación Técnica', c.CoordinadorTecnico], ['Dirección del centro educativo', c.Director]])
+    + `<p class="d-nota">Registro de eventualidades en espacios físicos como medida de protección y conservación del patrimonio (Ley General de Control Interno N.° 8292, art. 8 a; Normas de Control Interno, norma 4.3).</p>`;
+  abrirDoc('Bitácora de espacios', html);
 }
 
 /* =========================================================
