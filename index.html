@@ -59,7 +59,7 @@ input:focus,select:focus{outline:2px solid var(--navy2);outline-offset:0;border-
 .nav-item:hover{background:var(--fondo)}
 .nav-item.activo{background:#EEF2F8;border-left-color:var(--oro);color:var(--navy);font-weight:600}
 .nav-item svg{width:18px;height:18px;flex:none;stroke:currentColor;fill:none;stroke-width:1.8}
-.contenido{padding:28px 32px}
+.contenido{padding:28px 32px;min-width:0}
 .encabezado{margin-bottom:22px;padding-bottom:14px;border-bottom:1px solid var(--borde)}
 .encabezado h2{font-size:22px;color:var(--navy)}
 .encabezado p{color:var(--suave);font-size:14px;margin-top:4px}
@@ -132,6 +132,62 @@ input:disabled,select:disabled{background:#F4F6F9;color:var(--texto)}
   .modal-fondo{padding:0}.modal{border-radius:0;min-height:100%}
   .modal-pie{flex-wrap:wrap}.modal-pie .btn{flex:1}.flex1{display:none}
   .segment{width:100%}.segment button{flex:1}
+}
+
+/* ---------- Inventario v3 ---------- */
+.fila-enc{display:flex;gap:16px;align-items:flex-end;flex-wrap:wrap}.fila-enc>div:first-child{flex:1 1 280px}
+.enc-acciones{display:flex;gap:8px;flex-wrap:wrap}
+.kpis4{grid-template-columns:repeat(4,1fr)}
+.tinv th.chk,.tinv td.chk{width:36px;text-align:center}.tinv td.chk input,.tinv th.chk input{width:18px;height:18px}
+.tinv tr.sel td{background:#EEF3FB}.tenue{color:#8A94A6}
+.barra-sel{position:sticky;top:0;z-index:5;display:flex;gap:10px;align-items:center;flex-wrap:wrap;background:#0B2A55;color:#fff;padding:10px 14px;border-radius:6px;margin-bottom:12px}
+.barra-sel .btn{padding:8px 14px}.barra-sel .enlace{color:#fff}.barra-sel b{margin-right:auto}
+.barra-sel .btn:not(.btn-peligro){background:#fff;color:var(--navy)}
+.nota{font-size:12.5px;color:var(--suave);line-height:1.45;margin-top:6px}
+.caja-reporte{margin-top:18px;border:1px solid #F0DC9C;background:#FFFCF2;border-radius:6px;padding:14px}
+.caja-reporte h4,.historial h4{font-size:14px;color:var(--navy);margin-bottom:6px}.caja-reporte .btn{margin-top:10px}
+.historial{margin-top:20px;border-top:1px solid var(--borde);padding-top:14px}
+.linea{list-style:none;border-left:2px solid var(--borde);margin-left:6px}
+.linea li{position:relative;padding:0 0 12px 16px;font-size:13px}
+.linea li::before{content:'';position:absolute;left:-6px;top:4px;width:10px;height:10px;border-radius:50%;background:var(--oro)}
+.linea .lt{display:inline-block;min-width:84px;color:var(--suave)}.linea .ld{color:var(--texto);margin-top:2px;padding-left:84px}.linea .ld.tenue{color:#8A94A6;font-size:12px}
+.tabla-wrap.mini{max-height:220px;overflow:auto;border:1px solid var(--borde);border-radius:4px}.tabla-wrap.mini table{font-size:12.5px}
+.modal-pie{flex-wrap:wrap}
+/* ---------- Documentos ---------- */
+#docView{position:fixed;inset:0;background:#5B6B80;z-index:80;display:flex;flex-direction:column}
+.doc-barra{display:flex;gap:10px;align-items:center;background:var(--navy);color:#fff;padding:10px 16px;border-bottom:3px solid var(--oro)}
+.doc-barra .btn-sec{background:transparent;color:#fff;border-color:rgba(255,255,255,.5)}
+.doc-lienzo{flex:1;overflow:auto;padding:24px 12px}
+.hoja{background:#fff;max-width:816px;margin:0 auto;padding:48px 56px;box-shadow:0 6px 24px rgba(0,0,0,.25);color:#111;font-size:12.5px;line-height:1.5}
+.d-cab{display:flex;gap:14px;align-items:center;border-bottom:3px solid #0B2A55;padding-bottom:10px}
+.d-esc svg{width:40px;height:46px}.d-inst b{display:block;font-size:15px;color:#0B2A55}.d-inst span{display:block;font-size:11px;color:#444}
+.d-tit{text-align:center;font-size:16px;color:#0B2A55;margin:22px 0 4px;text-transform:uppercase;letter-spacing:.4px;line-height:1.3}
+.d-sub{text-align:center;font-size:12px;color:#333;margin-bottom:16px}
+.d-p{margin:10px 0;text-align:justify}.d-decl{background:#F5F7FA;border-left:3px solid #C9A227;padding:8px 12px}
+.d-cert{text-align:center;font-weight:700;letter-spacing:3px;margin:12px 0;font-size:14px}
+.d-tab,.d-datos{width:100%;border-collapse:collapse;margin:10px 0;font-size:11px}
+.d-tab th{background:#0B2A55;color:#fff;padding:5px 6px;text-align:left;font-weight:600;text-transform:none;letter-spacing:0;font-size:11px;border:1px solid #0B2A55}
+.d-tab td,.d-datos td{border:1px solid #BFC8D6;padding:4px 6px;vertical-align:top}
+.d-lista{margin:8px 0 8px 22px;font-size:12px}.d-lista li{margin-bottom:6px;text-align:justify}
+.d-firmas{display:grid;grid-template-columns:repeat(2,1fr);gap:46px 40px;margin:46px 0 18px;page-break-inside:avoid}
+.d-firma{text-align:center;font-size:11.5px}.d-firma .d-linea{border-top:1px solid #111;margin-bottom:4px}
+.d-firma b,.d-firma span{display:block}.d-ced{color:#555;font-size:10.5px;margin-top:2px}
+.d-sello{text-align:right;color:#888;font-size:11px;margin-top:-10px}
+.d-nota{font-size:10px;color:#555;margin-top:14px;border-top:1px solid #DDD;padding-top:6px}
+.d-pie{font-size:9.5px;color:#888;margin-top:18px;text-align:center}
+@media print{
+  @page{size:letter;margin:14mm}
+  body.con-doc>*:not(#docView){display:none!important}
+  body.con-doc{background:#fff}
+  #docView{position:static;display:block;background:#fff}
+  .doc-barra{display:none!important}.doc-lienzo{padding:0;overflow:visible}
+  .hoja{box-shadow:none;max-width:none;padding:0;margin:0}
+  .d-tab thead{display:table-header-group}.d-tab tr{page-break-inside:avoid}
+  *{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+}
+@media (max-width:820px){
+  .kpis4{grid-template-columns:repeat(2,1fr)}.hoja{padding:22px 16px}.d-firmas{grid-template-columns:1fr 1fr;gap:36px 16px}
+  .linea .ld{padding-left:0}.enc-acciones{width:100%}.enc-acciones .btn{flex:1}
 }
 
 @media (max-width:820px){
@@ -224,16 +280,18 @@ const IC = {
   ley:'<svg viewBox="0 0 24 24"><path d="M12 2v20M17 6H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>',
   sol:'<svg viewBox="0 0 24 24"><path d="M4 4h16v12H8l-4 4z"/></svg>',
   doc:'<svg viewBox="0 0 24 24"><path d="M6 2h9l5 5v15H6z"/><path d="M14 2v6h6M9 13h8M9 17h8"/></svg>',
+  mis:'<svg viewBox="0 0 24 24"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 8h8M8 12h8M8 16h5"/></svg>',
   usr:'<svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="4"/><path d="M2 21a7 7 0 0 1 14 0M17 11h6M20 8v6"/></svg>'
 };
 
 const MODULOS = [
   {id:'inicio', nombre:'Inicio', icono:IC.inicio},
-  {id:'especialidades', nombre:'Especialidades', icono:IC.esp, desc:'Ficha de cada especialidad: docentes, grupos, matrícula y estado de talleres y laboratorios.'},
-  {id:'inventario', nombre:'Inventario', icono:IC.inv, listo:true, desc:'Registro de equipo por especialidad con código QR, ubicación, estado e historial.'},
-  {id:'ley7372', nombre:'Ley 7372', icono:IC.ley, desc:'Plan de inversión y seguimiento de cada compra: solicitada, aprobada, adjudicada, recibida y pagada.'},
-  {id:'solicitudes', nombre:'Solicitudes', icono:IC.sol, desc:'Pedidos de equipo, reportes de daño y mantenimiento, con trazabilidad completa.'},
-  {id:'documentos', nombre:'Documentos', icono:IC.doc, desc:'Plan Quinquenal, planes de inversión, actas de la Comisión y lineamientos DETCE.'},
+  {id:'misbienes', nombre:'Mis bienes', icono:IC.mis, listo:true, desc:'Bienes asignados a su custodia, su estado, reporte de novedades y su inventario en PDF.'},
+  {id:'especialidades', nombre:'Especialidades', icono:IC.esp, gestion:true, desc:'Ficha de cada especialidad: docentes, grupos, matrícula y estado de talleres y laboratorios.'},
+  {id:'inventario', nombre:'Inventario', icono:IC.inv, listo:true, gestion:true, desc:'Inventario institucional: traslados, bajas por causal, actas, certificaciones y exportación en formato MEP.'},
+  {id:'ley7372', nombre:'Ley 7372', icono:IC.ley, gestion:true, desc:'Plan de inversión y seguimiento de cada compra: solicitada, aprobada, adjudicada, recibida y pagada.'},
+  {id:'solicitudes', nombre:'Solicitudes', icono:IC.sol, gestion:true, desc:'Pedidos de equipo, reportes de daño y mantenimiento, con trazabilidad completa.'},
+  {id:'documentos', nombre:'Documentos', icono:IC.doc, gestion:true, desc:'Plan Quinquenal, planes de inversión, actas de la Comisión y lineamientos DETCE.'},
   {id:'usuarios', nombre:'Usuarios', icono:IC.usr, soloAdmin:true}
 ];
 
@@ -346,10 +404,12 @@ function entrar(){
 }
 
 function esAdmin(){ return sesion.usuario && sesion.usuario.rol==='Administrador'; }
+function esGestion(){ return sesion.usuario && ['Administrador','Dirección','Junta Administrativa','Contabilidad'].includes(sesion.usuario.rol); }
+function modulosVisibles(){ return MODULOS.filter(x=>(!x.soloAdmin||esAdmin()) && (!x.gestion||esGestion())); }
 
 function pintarMenu(){
   const m=$('menu'); m.innerHTML='<div class="titulo-sec">Menú</div>';
-  MODULOS.filter(x=>!x.soloAdmin || esAdmin()).forEach(x=>{
+  modulosVisibles().forEach(x=>{
     const b=document.createElement('button');
     b.className='nav-item'; b.dataset.id=x.id; b.innerHTML=x.icono+'<span>'+x.nombre+'</span>';
     b.onclick=()=>ir(x.id); m.appendChild(b);
@@ -362,6 +422,7 @@ function ir(id){
   if(id==='inicio') return vistaInicio(c);
   if(id==='usuarios') return vistaUsuarios(c);
   if(id==='inventario') return vistaInventario(c);
+  if(id==='misbienes') return vistaMisBienes(c);
   const mod = MODULOS.find(x=>x.id===id);
   c.innerHTML = `<div class="encabezado"><h2>${mod.nombre}</h2><p>${mod.desc}</p></div>
     <div class="panel"><span class="estado">En construcción</span><p style="margin-top:12px;color:var(--suave);font-size:14px">Este módulo se habilitará en la siguiente etapa del proyecto.</p></div>`;
@@ -372,7 +433,7 @@ function vistaInicio(c){
   const saludo = h<12?'Buenos días':h<18?'Buenas tardes':'Buenas noches';
   c.innerHTML = `<div class="encabezado"><h2>${saludo}, ${esc(sesion.usuario.nombre.split(' ')[0])}</h2>
     <p>${esc(INSTITUCION)} · Panel de la Coordinación Técnica</p></div>
-    <div class="grid">${MODULOS.filter(x=>x.desc).map(x=>`
+    <div class="grid">${modulosVisibles().filter(x=>x.desc).map(x=>`
       <div class="mod" style="cursor:pointer" onclick="ir('${x.id}')"><h3>${x.nombre}</h3><p>${x.desc}</p><span class="estado ${x.listo?'listo':''}">${x.listo?'Disponible':'En construcción'}</span></div>`).join('')}
       ${esAdmin()?`<div class="mod"><h3>Usuarios</h3><p>Autorice o retire el acceso de docentes, Dirección, Junta y Contabilidad.</p><span class="estado listo">Disponible</span></div>`:''}
     </div>`;
@@ -432,20 +493,50 @@ async function guardarUsr(e){
 }
 
 /* =========================================================
-   MÓDULO INVENTARIO
+   MÓDULO INVENTARIO (v3) — custodia, traslados, bajas por causal, documentos
    ========================================================= */
-const INV = {items:[], cat:{estados:[],modos:[],motivos:[]}, puedeEditar:false, esAdmin:false,
-  f:{q:'', ubic:'', estado:'', modo:'', sit:'Activo'}, limite:100};
+const INV = {items:[], cat:{estados:[],modos:[],causales:[],requisitos:{}}, esAdmin:false, veTodo:false, yo:'',
+  config:{}, nombres:{}, usuarios:[], sel:new Set(),
+  f:{q:'', ubic:'', estado:'', modo:'', resp:'', sit:'Activo'}, limite:100};
+
+const CAMPOS_CAUSAL = {
+  Empresa:['Empresa de disposición final','Autorizada por el Ministerio de Salud'],
+  PermisoSalud:['N.° de permiso / autorización del Ministerio de Salud',''],
+  Donatario:['Institución donataria','Persona jurídica de interés público o sin fines de lucro, o dependencia del Estado (no personas físicas)'],
+  CedulaJuridica:['Cédula jurídica del donatario',''],
+  Comprador:['Nombre del comprador',''], CedulaComprador:['Cédula del comprador',''],
+  Monto:['Monto de la venta (₡)','Depositado en la cuenta de la Junta; no se recibe efectivo'], Comprobante:['N.° de comprobante de depósito',''],
+  DescripcionHecho:['Descripción del hecho (caso fortuito o fuerza mayor)','Incluya fecha y circunstancias; se verificó el inventario físico contra el Libro'],
+  DenunciaOIJ:['N.° de denuncia ante el OIJ',''], FechaDenuncia:['Fecha de la denuncia',''],
+  OficioJunta:['N.° de oficio enviado a la Junta / Supervisión','Tras búsqueda exhaustiva sin localizar el bien']
+};
+const AYUDA_CAUSAL = {
+  'Inservibilidad (destrucción)':'Requiere acuerdo de Junta, empresa autorizada por el Ministerio de Salud y acta de entrega en dos originales. Retire la placa antes de entregar el bien.',
+  'Donación':'Solo bienes en estricto desuso. Requiere nota de ofrecimiento y aceptación por escrito, acuerdo de Junta y acta de donación en dos originales.',
+  'Venta':'Requiere acuerdo de Junta, publicación transparente, depósito en la cuenta de la Junta y copia de la cédula del comprador.',
+  'Caso fortuito o fuerza mayor':'Verifique el inventario físico contra el Libro y liste los bienes destruidos o desaparecidos. Las firmas implican responsabilidad.',
+  'Hurto o robo':'Requiere denuncia ante el OIJ, informe de la persona responsable y acuerdo de Junta. No exime de responsabilidades.',
+  'Pérdida o desaparición':'Tras búsqueda exhaustiva, informe por oficio a la Junta; si no resuelve, a la Supervisión. No exime de responsabilidades.',
+  'Exclusión de bien no patrimoniable':'Solo bienes con vida útil menor a un año. La Presidencia informa a la Junta en la siguiente sesión.',
+  'Retiro por la FOD (PRONIE)':'Se retira la placa del centro educativo y se conserva la placa de la FOD (circular DVM-PICR-046-09-2016).'
+};
+const CFG_CAMPOS = [['Institucion','Nombre del centro educativo'],['CodigoPresupuestario','Código presupuestario'],['DRE','Dirección Regional de Educación'],
+  ['Circuito','Circuito'],['Canton','Cantón / localidad'],['Director','Persona directora'],['PresidenteJunta','Presidencia de la Junta Administrativa'],['CoordinadorTecnico','Coordinación Técnica']];
+
+function nombreDe(c){ return c ? (INV.nombres[c] || c) : 'Sin asignar'; }
+
+async function cargarInv(){
+  const r = await api('invListar');
+  if(!r.ok) throw new Error(r.error);
+  Object.assign(INV, {items:r.items, cat:r.catalogos, esAdmin:r.esAdmin, veTodo:r.veTodo, yo:r.yo, config:r.config||{}, nombres:r.nombres||{}, usuarios:r.usuarios||[]});
+  INV.sel = new Set();
+}
 
 async function vistaInventario(c){
-  c.innerHTML = `<div class="encabezado"><h2>Inventario</h2><p>Bienes de la especialidad según el formato de inventario del MEP.</p></div>
-    <div id="invCuerpo"><div class="panel">Cargando inventario…</div></div>`;
-  try{
-    const r = await api('invListar');
-    if(!r.ok){ $('invCuerpo').innerHTML = `<div class="panel">${esc(r.error)}</div>`; return; }
-    Object.assign(INV, {items:r.items, cat:r.catalogos, puedeEditar:r.puedeEditar, esAdmin:r.esAdmin, limite:100});
-    pintarInventario();
-  }catch(e){ $('invCuerpo').innerHTML = '<div class="panel">No se pudo cargar el inventario.</div>'; }
+  c.innerHTML = `<div class="encabezado fila-enc"><div><h2>Inventario institucional</h2><p>Registro y control de bienes según la normativa de control interno del MEP.</p></div>
+    <div class="enc-acciones" id="encAcc"></div></div><div id="invCuerpo"><div class="panel">Cargando inventario…</div></div>`;
+  try{ await cargarInv(); INV.limite=100; pintarInventario(); }
+  catch(e){ $('invCuerpo').innerHTML = `<div class="panel">${esc(e.message||'No se pudo cargar el inventario.')}</div>`; }
 }
 
 function invFiltrados(){
@@ -455,47 +546,54 @@ function invFiltrados(){
     (!f.ubic || i.Ubicacion===f.ubic) &&
     (!f.estado || (f.estado==='Sin estado' ? !i.Estado : i.Estado===f.estado)) &&
     (!f.modo || i.ModoAdquisicion===f.modo) &&
-    (!q || [i.Placa,i.Descripcion,i.Marca,i.Modelo,i.Serie,i.Ubicacion,i.Observaciones].join(' ').toLowerCase().includes(q))
+    (!f.resp || (f.resp==='__sin' ? !i.Responsable : i.Responsable===f.resp)) &&
+    (!q || [i.Placa,i.Descripcion,i.Marca,i.Modelo,i.Serie,i.Ubicacion,i.Observaciones,nombreDe(i.Responsable)].join(' ').toLowerCase().includes(q))
   ).sort((a,b)=>a.Placa.localeCompare(b.Placa,'es',{numeric:true}));
 }
 
-function unicos(campo){ return [...new Set(INV.items.map(i=>i[campo]).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'es',{numeric:true})); }
-function opciones(lista, sel, vacio){ return (vacio!=null?`<option value="">${vacio}</option>`:'') + lista.map(x=>`<option${x===sel?' selected':''}>${esc(x)}</option>`).join(''); }
+function unicos(campo, lista){ return [...new Set((lista||INV.items).map(i=>i[campo]).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'es',{numeric:true})); }
+function opciones(lista, sel, vacio){ return (vacio!=null?`<option value="">${vacio}</option>`:'') + lista.map(x=>{ const [v,t]=Array.isArray(x)?x:[x,x]; return `<option value="${esc(v)}"${v===sel?' selected':''}>${esc(t)}</option>`; }).join(''); }
+function kpisHtml(lista, titulo){
+  const cnt = e => lista.filter(i=>i.Estado===e).length;
+  return `<div class="kpi"><span>${titulo}</span><b>${lista.length}</b></div>
+    <div class="kpi bueno"><span>Bueno</span><b>${cnt('Bueno')}</b></div>
+    <div class="kpi regular"><span>Regular</span><b>${cnt('Regular')}</b></div>
+    <div class="kpi malo"><span>Malo</span><b>${cnt('Malo')}</b></div>`;
+}
 
 function pintarInventario(){
   const act = INV.items.filter(i=>i.Situacion==='Activo');
-  const cnt = e => act.filter(i=>i.Estado===e).length;
   const f = INV.f;
+  $('encAcc').innerHTML = `${INV.esAdmin?'<button class="btn btn-auto btn-sec" id="btnCfg">Datos institucionales</button>':''}
+    <button class="btn btn-auto btn-sec" id="btnCertInv">Certificar inventario (PDF)</button>
+    <button class="btn btn-auto btn-sec" id="btnExportar">Exportar a Excel</button>`;
+  const resps = [...new Set(INV.items.map(i=>i.Responsable).filter(Boolean))].map(c=>[c,nombreDe(c)]).sort((a,b)=>a[1].localeCompare(b[1]));
   $('invCuerpo').innerHTML = `
-    <div class="kpis">
-      <div class="kpi"><span>Bienes activos</span><b>${act.length}</b></div>
-      <div class="kpi bueno"><span>Bueno</span><b>${cnt('Bueno')}</b></div>
-      <div class="kpi regular"><span>Regular</span><b>${cnt('Regular')}</b></div>
-      <div class="kpi malo"><span>Malo</span><b>${cnt('Malo')}</b></div>
-      <div class="kpi baja"><span>Dados de baja</span><b>${INV.items.length-act.length}</b></div>
-    </div>
+    <div class="kpis">${kpisHtml(act,'Bienes activos')}<div class="kpi baja"><span>Dados de baja</span><b>${INV.items.length-act.length}</b></div></div>
     <div class="panel">
       <div class="barra">
-        <input id="fQ" placeholder="Buscar placa, descripción, marca, serie…" value="${esc(f.q)}">
+        <input id="fQ" placeholder="Buscar placa, descripción, serie, responsable…" value="${esc(f.q)}">
         <select id="fUbic">${opciones(unicos('Ubicacion'), f.ubic, 'Todas las ubicaciones')}</select>
+        <select id="fResp">${opciones([['__sin','Sin responsable asignado'],...resps], f.resp, 'Todos los responsables')}</select>
         <select id="fEstado">${opciones([...INV.cat.estados,'Sin estado'], f.estado, 'Todos los estados')}</select>
         <select id="fModo">${opciones(unicos('ModoAdquisicion'), f.modo, 'Todo modo de adquisición')}</select>
         <div class="segment" id="fSit">${['Activo','Baja','Todos'].map(s=>`<button type="button" data-s="${s}" class="${f.sit===s?'on':''}">${s==='Activo'?'Activos':s==='Baja'?'Bajas':'Todos'}</button>`).join('')}</div>
       </div>
       <div class="barra acciones">
         <span id="invConteo" class="conteo"></span>
-        ${INV.puedeEditar?'<button class="btn btn-auto" id="btnNuevo">+ Registrar bien</button>':''}
-        <button class="btn btn-auto btn-sec" id="btnExportar">Exportar a Excel</button>
+        ${INV.esAdmin?'<button class="btn btn-auto" id="btnNuevo">+ Registrar bien</button>':''}
       </div>
+      <div id="barraSel" class="barra-sel oculto"></div>
       <div class="tabla-wrap" id="invTabla"></div>
     </div>`;
-  $('fQ').addEventListener('input', e=>{ f.q=e.target.value; INV.limite=100; pintarTablaInv(); });
-  $('fUbic').onchange = e=>{ f.ubic=e.target.value; INV.limite=100; pintarTablaInv(); };
-  $('fEstado').onchange = e=>{ f.estado=e.target.value; INV.limite=100; pintarTablaInv(); };
-  $('fModo').onchange = e=>{ f.modo=e.target.value; INV.limite=100; pintarTablaInv(); };
-  $('fSit').querySelectorAll('button').forEach(b=>b.onclick=()=>{ f.sit=b.dataset.s; pintarInventario(); });
+  const re = ()=>{ INV.limite=100; pintarTablaInv(); };
+  $('fQ').addEventListener('input', e=>{ f.q=e.target.value; re(); });
+  [['fUbic','ubic'],['fResp','resp'],['fEstado','estado'],['fModo','modo']].forEach(([id,k])=>$(id).onchange=e=>{ f[k]=e.target.value; re(); });
+  $('fSit').querySelectorAll('button').forEach(b=>b.onclick=()=>{ f.sit=b.dataset.s; INV.sel.clear(); pintarInventario(); });
   if($('btnNuevo')) $('btnNuevo').onclick = ()=>abrirBien(null);
+  if($('btnCfg')) $('btnCfg').onclick = abrirConfig;
   $('btnExportar').onclick = exportarExcel;
+  $('btnCertInv').onclick = ()=>docCertInventario(invFiltrados().filter(i=>i.Situacion==='Activo'));
   pintarTablaInv();
 }
 
@@ -503,149 +601,427 @@ function badgeEstado(e){ return e ? `<span class="est ${e.toLowerCase()}">${esc(
 
 function pintarTablaInv(){
   const lista = invFiltrados();
+  const selec = INV.esAdmin && INV.f.sit==='Activo';
   $('invConteo').textContent = lista.length + ' bien' + (lista.length===1?'':'es');
+  pintarBarraSel();
   if(!lista.length){ $('invTabla').innerHTML = '<p class="vacio">No hay bienes con esos filtros.</p>'; return; }
   const vis = lista.slice(0, INV.limite);
-  $('invTabla').innerHTML = `<table class="tinv"><thead><tr><th>Placa</th><th>Descripción del bien</th><th>Marca</th><th>Modelo</th><th>Serie</th><th>Estado</th><th>Ubicación</th><th>Modo de adquisición</th>${INV.f.sit!=='Activo'?'<th>Acta</th>':''}</tr></thead><tbody>
-    ${vis.map(i=>`<tr data-p="${esc(i.Placa)}" class="${i.Situacion==='Baja'?'fila-baja':''}"><td class="placa">${esc(i.Placa)}</td><td>${esc(i.Descripcion)}</td><td>${esc(i.Marca)}</td><td>${esc(i.Modelo)}</td><td>${esc(i.Serie)}</td>
-      <td>${i.Situacion==='Baja'?'<span class="est baja">De baja</span>':badgeEstado(i.Estado)}</td><td>${esc(i.Ubicacion)}</td><td>${esc(i.ModoAdquisicion)}</td>${INV.f.sit!=='Activo'?`<td>${esc(i.ActaBaja)}</td>`:''}</tr>`).join('')}
+  const todosSel = selec && vis.every(i=>INV.sel.has(i.Placa));
+  $('invTabla').innerHTML = `<table class="tinv"><thead><tr>${selec?`<th class="chk"><input type="checkbox" id="chkTodos" ${todosSel?'checked':''} aria-label="Seleccionar visibles"></th>`:''}<th>Placa</th><th>Descripción del bien</th><th>Marca / Modelo</th><th>Serie</th><th>Estado</th><th>Ubicación</th><th>Responsable</th>${INV.f.sit!=='Activo'?'<th>Baja</th>':''}</tr></thead><tbody>
+    ${vis.map(i=>`<tr data-p="${esc(i.Placa)}" class="${i.Situacion==='Baja'?'fila-baja':''} ${INV.sel.has(i.Placa)?'sel':''}">
+      ${selec?`<td class="chk"><input type="checkbox" data-c="${esc(i.Placa)}" ${INV.sel.has(i.Placa)?'checked':''} aria-label="Seleccionar ${esc(i.Placa)}"></td>`:''}
+      <td class="placa">${esc(i.Placa)}</td><td>${esc(i.Descripcion)}</td><td>${esc([i.Marca,i.Modelo].filter(x=>x&&!/^no.?indica$/i.test(x)).join(' · ')||'—')}</td><td>${esc(i.Serie)}</td>
+      <td>${i.Situacion==='Baja'?'<span class="est baja">De baja</span>':badgeEstado(i.Estado)}</td><td>${esc(i.Ubicacion)}</td>
+      <td class="${i.Responsable?'':'tenue'}">${esc(nombreDe(i.Responsable))}</td>
+      ${INV.f.sit!=='Activo'?`<td>${i.Situacion==='Baja'?esc(i.MotivoBaja)+'<br><small>Acta '+esc(i.ActaBaja)+'</small>':''}</td>`:''}</tr>`).join('')}
     </tbody></table>
     ${lista.length>vis.length?`<button class="btn btn-sec btn-auto mas" id="btnMas">Mostrar más (${lista.length-vis.length} restantes)</button>`:''}`;
-  $('invTabla').querySelectorAll('tbody tr').forEach(tr=>tr.onclick=()=>abrirBien(INV.items.find(i=>i.Placa===tr.dataset.p)));
+  $('invTabla').querySelectorAll('tbody tr').forEach(tr=>tr.onclick=e=>{
+    if(e.target.closest('.chk')) return;
+    abrirBien(INV.items.find(i=>i.Placa===tr.dataset.p));
+  });
+  $('invTabla').querySelectorAll('input[data-c]').forEach(ch=>ch.onchange=()=>{ ch.checked?INV.sel.add(ch.dataset.c):INV.sel.delete(ch.dataset.c); ch.closest('tr').classList.toggle('sel',ch.checked); pintarBarraSel(); });
+  if($('chkTodos')) $('chkTodos').onchange=e=>{ vis.forEach(i=>e.target.checked?INV.sel.add(i.Placa):INV.sel.delete(i.Placa)); pintarTablaInv(); };
   if($('btnMas')) $('btnMas').onclick=()=>{ INV.limite+=200; pintarTablaInv(); };
 }
 
-/* ---------- Texto oficial de baja (formato del acta) ---------- */
-function fechaCR(iso){ if(!iso) return '—'; const [y,m,d]=iso.split('-'); return `${d}/${m}/${y}`; }
-function textoBaja(i){
-  return `El activo: ${i.Placa} que corresponde a: ${i.Descripcion} que consta del T.F.A.: ${i.TFA||'—'} fue dado de baja a partir del ${fechaCR(i.FechaBaja)} motivo ${(i.MotivoBaja||'').toLowerCase()} según consta en el acta #: ${i.ActaBaja} la cual se encuentra en los archivos de la institución.`;
+function pintarBarraSel(){
+  const b=$('barraSel'); if(!b) return;
+  const n=INV.sel.size;
+  b.classList.toggle('oculto', !n);
+  if(!n) return;
+  b.innerHTML = `<b>${n} bien${n===1?'':'es'} seleccionado${n===1?'':'s'}</b>
+    <button class="btn btn-auto" id="selTras">Trasladar / asignar</button>
+    <button class="btn btn-auto btn-peligro" id="selBaja">Dar de baja</button>
+    <button class="enlace" id="selLimpiar">Quitar selección</button>`;
+  const lista = ()=>[...INV.sel].map(p=>INV.items.find(i=>i.Placa===p)).filter(Boolean);
+  $('selTras').onclick=()=>formTraslado(lista());
+  $('selBaja').onclick=()=>formBaja(lista());
+  $('selLimpiar').onclick=()=>{ INV.sel.clear(); pintarTablaInv(); };
 }
 
-/* ---------- Ficha del bien (ver / registrar / editar / baja) ---------- */
-function abrirBien(item){
-  const nuevo = !item;
-  const i = item || {Placa:'',Descripcion:'',Marca:'',Modelo:'',Serie:'',Estado:'Bueno',Ubicacion:INV.f.ubic||'',UbicacionReal:'',Especialidad:'Contabilidad',ModoAdquisicion:'Ley 7372',TFA:'',Observaciones:'',Situacion:'Activo'};
-  const baja = i.Situacion==='Baja';
-  const editable = INV.puedeEditar && !baja;
-  const ro = editable ? '' : 'disabled';
-  const m = document.createElement('div');
-  m.className='modal-fondo'; m.id='modalBien';
-  m.innerHTML = `<div class="modal" role="dialog" aria-modal="true">
-    <div class="modal-cab"><h3>${nuevo?'Registrar bien':'Placa '+esc(i.Placa)}</h3><button class="cerrar" id="mCerrar" aria-label="Cerrar">✕</button></div>
-    <div class="modal-cuerpo">
-      ${baja?`<div class="aviso-baja"><b>Bien dado de baja</b><p id="txtBaja">${esc(textoBaja(i))}</p><button class="btn-mini" id="btnCopiar">Copiar texto</button></div>`:''}
-      <form id="formBien" class="grid-form" novalidate>
-        <div><label>Número de identificación (placa)</label><input id="bPlaca" value="${esc(i.Placa)}" placeholder="6526-0000" ${nuevo?'':'disabled'}></div>
-        <div class="ancho2"><label>Descripción del bien</label><input id="bDescripcion" value="${esc(i.Descripcion)}" ${ro}></div>
-        <div><label>Marca</label><input id="bMarca" value="${esc(i.Marca)}" ${ro}></div>
-        <div><label>Modelo</label><input id="bModelo" value="${esc(i.Modelo)}" ${ro}></div>
-        <div><label>Serie</label><input id="bSerie" value="${esc(i.Serie)}" ${ro}></div>
-        <div class="ancho3"><label>Estado</label><div class="radios">${INV.cat.estados.map(e=>`<label class="radio ${e.toLowerCase()}"><input type="radio" name="bEstado" value="${e}" ${i.Estado===e?'checked':''} ${ro}> ${e}</label>`).join('')}</div></div>
-        <div><label>Ubicación (aula)</label><input id="bUbicacion" list="dlUbic" value="${esc(i.Ubicacion)}" ${ro}></div>
-        <div><label>Ubicación real</label><input id="bUbicacionReal" value="${esc(i.UbicacionReal)}" ${ro}></div>
-        <div><label>Especialidad</label><input id="bEspecialidad" list="dlEsp" value="${esc(i.Especialidad)}" ${ro}></div>
-        <div><label>Modo de adquisición</label><select id="bModo" ${ro}>${opciones(INV.cat.modos.includes(i.ModoAdquisicion)||!i.ModoAdquisicion?INV.cat.modos:[...INV.cat.modos,i.ModoAdquisicion], i.ModoAdquisicion)}</select></div>
-        <div><label>T.F.A. (tomo/folio/asiento)</label><input id="bTFA" value="${esc(i.TFA)}" placeholder="1/75/6" ${ro}></div>
-        <div class="ancho3"><label>Observaciones</label><input id="bObservaciones" value="${esc(i.Observaciones)}" ${ro}></div>
-        <datalist id="dlUbic">${unicos('Ubicacion').map(x=>`<option value="${esc(x)}">`).join('')}</datalist>
-        <datalist id="dlEsp">${unicos('Especialidad').map(x=>`<option value="${esc(x)}">`).join('')}</datalist>
-      </form>
-      <div id="zonaBaja"></div>
-      <div id="msgBien" class="msg oculto"></div>
-      ${!nuevo&&i.Actualizado?`<p class="meta">Última modificación: ${esc(i.Actualizado)} · ${esc(i.ActualizadoPor)}</p>`:''}
-    </div>
-    <div class="modal-pie">
-      ${INV.esAdmin && !nuevo && !baja ? '<button class="btn btn-auto btn-peligro" id="btnBaja">Dar de baja</button>':''}
-      ${INV.esAdmin && baja ? '<button class="btn btn-auto btn-sec" id="btnRevertir">Revertir baja</button>':''}
-      <span class="flex1"></span>
-      <button class="btn btn-auto btn-sec" id="mCerrar2">Cerrar</button>
-      ${editable?`<button class="btn btn-auto" id="btnGuardarBien">${nuevo?'Registrar':'Guardar cambios'}</button>`:''}
-    </div></div>`;
+/* ---------- Ventanas modales ---------- */
+function modal(id, titulo, cuerpo, pie, ancho){
+  const viejo=$(id); if(viejo) viejo.remove();
+  const m=document.createElement('div'); m.className='modal-fondo'; m.id=id;
+  m.innerHTML=`<div class="modal" role="dialog" aria-modal="true" style="${ancho?'max-width:'+ancho+'px':''}">
+    <div class="modal-cab"><h3>${titulo}</h3><button class="cerrar" data-x aria-label="Cerrar">✕</button></div>
+    <div class="modal-cuerpo">${cuerpo}<div class="msg oculto" data-msg></div></div>
+    <div class="modal-pie">${pie||''}<span class="flex1"></span><button class="btn btn-auto btn-sec" data-x>Cerrar</button></div></div>`;
   document.body.appendChild(m);
-  const cerrar = ()=>m.remove();
-  $('mCerrar').onclick = cerrar; $('mCerrar2').onclick = cerrar;
-  m.addEventListener('click', e=>{ if(e.target===m) cerrar(); });
-  if($('btnCopiar')) $('btnCopiar').onclick = ()=>copiar($('txtBaja').textContent, $('btnCopiar'));
-  if($('btnGuardarBien')) $('btnGuardarBien').onclick = ()=>guardarBien(nuevo);
-  if($('btnBaja')) $('btnBaja').onclick = ()=>formBaja(i);
-  if($('btnRevertir')) $('btnRevertir').onclick = ()=>revertirBaja(i);
-  (nuevo?$('bPlaca'):$('bDescripcion')).focus();
+  m.querySelectorAll('[data-x]').forEach(b=>b.onclick=()=>m.remove());
+  m.addEventListener('click',e=>{ if(e.target===m) m.remove(); });
+  m.msg=(t,tipo)=>{ const x=m.querySelector('[data-msg]'); x.textContent=t; x.className='msg '+tipo; x.scrollIntoView({block:'nearest'}); };
+  return m;
 }
-
-function msgBien(t,tipo){ const m=$('msgBien'); m.textContent=t; m.className='msg '+tipo; }
 
 function actualizarLocal(item){
   const k = INV.items.findIndex(x=>x.Placa===item.Placa);
   if(k>=0) INV.items[k]=item; else INV.items.push(item);
 }
+function refrescarVista(){ if($('invCuerpo')) pintarInventario(); else if($('misCuerpo')) pintarMisBienes(); }
 
-async function guardarBien(nuevo){
+/* ---------- Ficha del bien ---------- */
+function abrirBien(item, desdeMis){
+  const nuevo = !item;
+  const i = item || {Placa:'',Descripcion:'',Marca:'',Modelo:'',Serie:'',Estado:'Bueno',Ubicacion:INV.f.ubic||'',UbicacionReal:'',Especialidad:'Contabilidad',ModoAdquisicion:'Ley 7372',TFA:'',Observaciones:'',Situacion:'Activo',Responsable:''};
+  const baja = i.Situacion==='Baja';
+  const editable = INV.esAdmin && !baja && !desdeMis;
+  const ro = editable ? '' : 'disabled';
+  const esMio = i.Responsable===INV.yo && !baja;
+  const cuerpo = `
+    ${baja?`<div class="aviso-baja"><b>Bien dado de baja · ${esc(i.MotivoBaja)}</b><p>${esc(textoBaja(i))}</p><small>Consecutivo ${esc(i.ConsecutivoBaja||'—')}</small></div>`:''}
+    <form class="grid-form" novalidate>
+      <div><label>Número de identificación (placa)</label><input id="bPlaca" value="${esc(i.Placa)}" placeholder="6526-0000" ${nuevo?'':'disabled'}></div>
+      <div class="ancho2"><label>Descripción del bien</label><input id="bDescripcion" value="${esc(i.Descripcion)}" ${ro}></div>
+      <div><label>Marca</label><input id="bMarca" value="${esc(i.Marca)}" ${ro}></div>
+      <div><label>Modelo</label><input id="bModelo" value="${esc(i.Modelo)}" ${ro}></div>
+      <div><label>Serie</label><input id="bSerie" value="${esc(i.Serie)}" ${ro}></div>
+      <div class="ancho3"><label>Estado</label><div class="radios">${INV.cat.estados.map(e=>`<label class="radio ${e.toLowerCase()}"><input type="radio" name="bEstado" value="${e}" ${i.Estado===e?'checked':''} ${ro}> ${e}</label>`).join('')}</div></div>
+      <div><label>Ubicación (aula)</label><input id="bUbicacion" list="dlUbic" value="${esc(i.Ubicacion)}" ${nuevo&&editable?'':'disabled'}></div>
+      <div><label>Ubicación real</label><input id="bUbicacionReal" value="${esc(i.UbicacionReal)}" ${nuevo&&editable?'':'disabled'}></div>
+      <div><label>Persona responsable</label>${nuevo&&editable?`<select id="bResp">${opciones(INV.usuarios.map(x=>[x.correo,x.nombre+' · '+x.rol]),'','Sin asignar')}</select>`:`<input value="${esc(nombreDe(i.Responsable))}" disabled>`}</div>
+      <div><label>Especialidad</label><input id="bEspecialidad" list="dlEsp" value="${esc(i.Especialidad)}" ${ro}></div>
+      <div><label>Modo de adquisición</label><select id="bModo" ${ro}>${opciones(INV.cat.modos.includes(i.ModoAdquisicion)||!i.ModoAdquisicion?INV.cat.modos:[...INV.cat.modos,i.ModoAdquisicion], i.ModoAdquisicion)}</select></div>
+      <div><label>T.F.A. de registro (tomo/folio/asiento)</label><input id="bTFA" value="${esc(i.TFA)}" ${editable?'placeholder="1/75/6"':''} ${ro}></div>
+      ${nuevo?`<div><label>Fecha de ingreso</label><input type="date" id="bFechaIng" value="${hoyISO()}"></div>`:''}
+      <div class="ancho3"><label>Observaciones</label><input id="bObservaciones" value="${esc(i.Observaciones)}" ${ro}></div>
+      <datalist id="dlUbic">${unicos('Ubicacion').map(x=>`<option value="${esc(x)}">`).join('')}</datalist>
+      <datalist id="dlEsp">${unicos('Especialidad').map(x=>`<option value="${esc(x)}">`).join('')}</datalist>
+    </form>
+    ${!nuevo&&editable?'<p class="nota">La ubicación y la persona responsable solo cambian mediante <b>Trasladar / asignar</b>, para que quede la boleta y el registro del movimiento.</p>':''}
+    ${esMio?`<div class="caja-reporte"><h4>Reportar novedad del bien</h4><p class="nota">Como persona responsable, informe cualquier cambio en el estado o uso del bien (Reglamento 40797-H, art. 7 k).</p>
+      <div class="grid-form"><div><label>Estado actual</label><select id="rEstado">${opciones(INV.cat.estados,i.Estado)}</select></div>
+      <div class="ancho2"><label>Detalle</label><input id="rDetalle" placeholder="Ej. la pantalla no enciende desde el 3 de noviembre"></div></div>
+      <button class="btn btn-auto" id="btnReportar" type="button">Enviar reporte</button></div>`:''}
+    ${!nuevo?'<div class="historial"><h4>Historial de movimientos</h4><div id="histMov">Cargando…</div></div>':''}`;
+  const pie = `
+    ${INV.esAdmin && !nuevo && !baja && !desdeMis ? '<button class="btn btn-auto btn-sec" id="fTras">Trasladar / asignar</button><button class="btn btn-auto btn-peligro" id="fBaja">Dar de baja</button>':''}
+    ${baja ? '<button class="btn btn-auto btn-sec" id="fActa">Acta de baja (PDF)</button><button class="btn btn-auto btn-sec" id="fCert">Certificación (PDF)</button>':''}
+    ${INV.esAdmin && baja ? '<button class="btn btn-auto btn-sec" id="fAnular">Anular baja</button>':''}
+    ${editable?`<button class="btn btn-auto" id="btnGuardarBien">${nuevo?'Registrar':'Guardar cambios'}</button>`:''}`;
+  const m = modal('modalBien', nuevo?'Registrar bien':'Placa '+esc(i.Placa), cuerpo, pie);
+  if($('btnGuardarBien')) $('btnGuardarBien').onclick = ()=>guardarBien(nuevo, m);
+  if($('fTras')) $('fTras').onclick = ()=>{ m.remove(); formTraslado([i]); };
+  if($('fBaja')) $('fBaja').onclick = ()=>{ m.remove(); formBaja([i]); };
+  if($('fActa')) $('fActa').onclick = ()=>docBaja(i.ConsecutivoBaja,'acta');
+  if($('fCert')) $('fCert').onclick = ()=>docBaja(i.ConsecutivoBaja,'cert');
+  if($('fAnular')) $('fAnular').onclick = ()=>formAnular(i);
+  if($('btnReportar')) $('btnReportar').onclick = ()=>enviarReporte(i, m);
+  if(!nuevo) cargarHistorial(i.Placa);
+  if(nuevo) $('bPlaca').focus();
+}
+
+async function cargarHistorial(placa){
+  try{
+    const r = await api('invMovimientos',{datos:{Placa:placa}});
+    const h=$('histMov'); if(!h) return;
+    if(!r.ok || !r.movimientos.length){ h.innerHTML='<p class="nota">Sin movimientos registrados en la plataforma (los datos importados no tienen historial previo).</p>'; return; }
+    h.innerHTML = `<ul class="linea">${r.movimientos.slice().reverse().map(m=>{
+      let det = m.Detalle;
+      if(m.Tipo==='Baja'){ try{ const d=JSON.parse(m.Detalle); det='Acta '+d.Acta+(d.SesionJunta?' · Sesión '+d.SesionJunta+', acuerdo '+d.AcuerdoJunta:''); }catch(e){} }
+      const mov = m.Tipo==='Traslado' ? `${esc(m.DeUbicacion||'—')} → ${esc(m.AUbicacion||'—')} · ${esc(nombreDe(m.DeResponsable))} → ${esc(nombreDe(m.AResponsable))}` : '';
+      const doc = m.Consecutivo && (m.Tipo==='Traslado'||m.Tipo==='Baja') ? ` <button class="enlace" data-doc="${esc(m.Consecutivo)}" data-t="${m.Tipo}">Ver ${m.Tipo==='Traslado'?'boleta':'acta'}</button>` : '';
+      return `<li><span class="lt">${esc(fechaCR(m.Fecha))}</span><b>${esc(m.Tipo)}</b>${m.Consecutivo?' · '+esc(m.Consecutivo):''}${m.Causal&&m.Tipo==='Baja'?' · '+esc(m.Causal):''}${doc}
+        ${mov?`<div class="ld">${mov}</div>`:''}${det?`<div class="ld">${esc(det)}</div>`:''}<div class="ld tenue">Registró: ${esc(nombreDe(m.RegistradoPor))}</div></li>`; }).join('')}</ul>`;
+    h.querySelectorAll('[data-doc]').forEach(b=>b.onclick=()=>b.dataset.t==='Traslado'?docTraslado(b.dataset.doc):docBaja(b.dataset.doc,'acta'));
+  }catch(e){ if($('histMov')) $('histMov').textContent='No se pudo cargar el historial.'; }
+}
+
+function hoyISO(){ const d=new Date(); return new Date(d.getTime()-d.getTimezoneOffset()*60000).toISOString().slice(0,10); }
+
+async function guardarBien(nuevo, m){
   const v = id => $(id).value.trim();
   const est = document.querySelector('input[name=bEstado]:checked');
   const datos = {nuevo, Placa:v('bPlaca'), Descripcion:v('bDescripcion'), Marca:v('bMarca'), Modelo:v('bModelo'), Serie:v('bSerie'),
-    Estado:est?est.value:'', Ubicacion:v('bUbicacion'), UbicacionReal:v('bUbicacionReal'), Especialidad:v('bEspecialidad'),
-    ModoAdquisicion:$('bModo').value, TFA:v('bTFA'), Observaciones:v('bObservaciones')};
-  if(!/^\d{4}-\d{1,6}$/.test(datos.Placa)) return msgBien('La placa debe tener el formato 6526-0000.','err');
-  if(!datos.Descripcion) return msgBien('Indique la descripción del bien.','err');
+    Estado:est?est.value:'', Especialidad:v('bEspecialidad'), ModoAdquisicion:$('bModo').value, TFA:v('bTFA'), Observaciones:v('bObservaciones')};
+  if(nuevo) Object.assign(datos,{Ubicacion:v('bUbicacion'), UbicacionReal:v('bUbicacionReal'), Responsable:$('bResp').value, FechaIngreso:$('bFechaIng').value});
+  if(!/^\d{4}-\d{1,6}$/.test(datos.Placa)) return m.msg('La placa debe tener el formato 6526-0000.','err');
+  if(!datos.Descripcion) return m.msg('Indique la descripción del bien.','err');
   const b=$('btnGuardarBien'); const t=b.textContent; cargando(b,true);
   try{
     const r = await api('invGuardar',{datos});
-    if(!r.ok){ msgBien(r.error,'err'); return; }
-    actualizarLocal(r.item); $('modalBien').remove(); pintarInventario();
+    if(!r.ok){ m.msg(r.error,'err'); cargando(b,false,t); return; }
+    actualizarLocal(r.item); m.remove(); refrescarVista();
     aviso(nuevo?'Bien registrado: '+r.item.Placa:'Cambios guardados: '+r.item.Placa);
-  }catch(e){ msgBien('No se pudo conectar con el servidor.','err'); }
-  finally{ if($('btnGuardarBien')) cargando(b,false,t); }
+  }catch(e){ m.msg('No se pudo conectar con el servidor.','err'); cargando(b,false,t); }
 }
 
-function formBaja(i){
-  const hoy = new Date(); const iso = new Date(hoy.getTime()-hoy.getTimezoneOffset()*60000).toISOString().slice(0,10);
-  $('btnBaja').classList.add('oculto');
-  $('zonaBaja').innerHTML = `<div class="caja-baja"><h4>Registrar baja del bien</h4>
-    <div class="grid-form">
-      <div><label>Fecha de la baja</label><input type="date" id="kFecha" value="${iso}"></div>
-      <div><label>Motivo</label><select id="kMotivo">${opciones(INV.cat.motivos,'Inservible')}</select></div>
-      <div><label>Número de acta</label><input id="kActa" placeholder="Ej. 64"></div>
-      <div><label>T.F.A.</label><input id="kTFA" value="${esc(i.TFA)}" placeholder="1/75/6"></div>
-    </div>
-    <label style="margin-top:12px">Texto para el acta</label><p class="vista-texto" id="kTexto"></p>
-    <button class="btn btn-auto btn-peligro" id="btnConfirmarBaja">Confirmar baja</button></div>`;
-  const prev = ()=> $('kTexto').textContent = textoBaja(Object.assign({},i,{FechaBaja:$('kFecha').value,MotivoBaja:$('kMotivo').value,ActaBaja:$('kActa').value||'___',TFA:$('kTFA').value}));
-  ['kFecha','kMotivo','kActa','kTFA'].forEach(id=>$(id).addEventListener('input',prev)); prev();
-  $('kActa').focus();
-  $('btnConfirmarBaja').onclick = async ()=>{
-    const datos={Placa:i.Placa, FechaBaja:$('kFecha').value, MotivoBaja:$('kMotivo').value, ActaBaja:$('kActa').value.trim(), TFA:$('kTFA').value.trim()};
-    if(!datos.ActaBaja) return msgBien('Indique el número de acta.','err');
-    const b=$('btnConfirmarBaja'); cargando(b,true);
+async function enviarReporte(i, m){
+  const datos={Placa:i.Placa, EstadoReportado:$('rEstado').value, Detalle:$('rDetalle').value.trim()};
+  if(!datos.Detalle) return m.msg('Describa la situación del bien.','err');
+  const b=$('btnReportar'); cargando(b,true);
+  try{
+    const r=await api('invReporte',{datos});
+    if(!r.ok){ m.msg(r.error,'err'); cargando(b,false,'Enviar reporte'); return; }
+    $('rDetalle').value=''; cargando(b,false,'Enviar reporte'); m.msg('Reporte registrado. La Coordinación Técnica lo verá en el historial del bien.','ok'); cargarHistorial(i.Placa);
+  }catch(e){ m.msg('No se pudo conectar con el servidor.','err'); cargando(b,false,'Enviar reporte'); }
+}
+
+function tablaMini(lista){
+  return `<div class="tabla-wrap mini"><table><thead><tr><th>Placa</th><th>Descripción</th><th>Estado</th><th>Ubicación</th><th>Responsable</th></tr></thead><tbody>
+    ${lista.map(i=>`<tr><td class="placa">${esc(i.Placa)}</td><td>${esc(i.Descripcion)}</td><td>${badgeEstado(i.Estado)}</td><td>${esc(i.Ubicacion)}</td><td>${esc(nombreDe(i.Responsable))}</td></tr>`).join('')}</tbody></table></div>`;
+}
+
+/* ---------- Traslado / asignación ---------- */
+function formTraslado(lista){
+  const cuerpo = `<p class="nota">Registra el cambio de ubicación y/o de persona responsable. Se genera la boleta con consecutivo para firmar (Reglamento 40797-H, art. 42).</p>
+    ${tablaMini(lista)}
+    <div class="grid-form" style="margin-top:14px">
+      <div><label>Fecha del traslado</label><input type="date" id="tFecha" value="${hoyISO()}"></div>
+      <div><label>Nueva ubicación (aula)</label><input id="tUbic" list="dlUbic2" placeholder="Dejar vacío para no cambiar"></div>
+      <div><label>Ubicación real</label><input id="tUbicReal" placeholder="Opcional"></div>
+      <div class="ancho3"><label class="radio" style="display:inline-flex"><input type="checkbox" id="tCambiaResp"> Cambiar persona responsable</label></div>
+      <div class="ancho2"><label>Nueva persona responsable</label><select id="tResp" disabled>${opciones(INV.usuarios.map(x=>[x.correo,x.nombre+' · '+x.rol]),'','Sin asignar (devolución a la Coordinación)')}</select></div>
+      <div class="ancho3"><label>Justificación</label><input id="tMotivo" placeholder="Ej. asignación de custodia para el curso lectivo 2027"></div>
+      <datalist id="dlUbic2">${unicos('Ubicacion').map(x=>`<option value="${esc(x)}">`).join('')}</datalist>
+    </div>`;
+  const m = modal('modalTras', `Trasladar / asignar · ${lista.length} bien${lista.length===1?'':'es'}`, cuerpo, '<button class="btn btn-auto" id="btnTras">Registrar traslado</button>', 820);
+  $('tCambiaResp').onchange=e=>$('tResp').disabled=!e.target.checked;
+  $('btnTras').onclick = async ()=>{
+    const datos={Placas:lista.map(i=>i.Placa), Fecha:$('tFecha').value, AUbicacion:$('tUbic').value.trim(), AUbicacionReal:$('tUbicReal').value.trim(), Motivo:$('tMotivo').value.trim()};
+    if($('tCambiaResp').checked) datos.AResponsable=$('tResp').value;
+    if(!datos.AUbicacion && !('AResponsable' in datos)) return m.msg('Indique la nueva ubicación o marque el cambio de responsable.','err');
+    if(!datos.Motivo) return m.msg('Indique la justificación del traslado.','err');
+    const b=$('btnTras'); cargando(b,true);
     try{
-      const r = await api('invBaja',{datos});
-      if(!r.ok){ msgBien(r.error,'err'); cargando(b,false,'Confirmar baja'); return; }
-      actualizarLocal(r.item); $('modalBien').remove(); pintarInventario(); abrirBien(r.item);
-      aviso('Baja registrada: '+r.item.Placa);
-    }catch(e){ msgBien('No se pudo conectar con el servidor.','err'); cargando(b,false,'Confirmar baja'); }
+      const r=await api('invTraslado',{datos});
+      if(!r.ok){ m.msg(r.error,'err'); cargando(b,false,'Registrar traslado'); return; }
+      r.items.forEach(actualizarLocal); INV.sel.clear(); m.remove(); refrescarVista();
+      aviso('Traslado registrado: '+r.consecutivo);
+      docTraslado(r.consecutivo);
+    }catch(e){ m.msg('No se pudo conectar con el servidor.','err'); cargando(b,false,'Registrar traslado'); }
   };
 }
 
-async function revertirBaja(i){
-  if(!confirm('¿Revertir la baja de la placa '+i.Placa+'? Volverá al inventario activo.')) return;
-  try{
-    const r = await api('invRevertir',{datos:{Placa:i.Placa}});
-    if(!r.ok) return msgBien(r.error,'err');
-    actualizarLocal(r.item); $('modalBien').remove(); pintarInventario(); aviso('Baja revertida: '+r.item.Placa);
-  }catch(e){ msgBien('No se pudo conectar con el servidor.','err'); }
+/* ---------- Baja por causal ---------- */
+function formBaja(lista){
+  const cuerpo = `${tablaMini(lista)}
+    <div class="grid-form" style="margin-top:14px">
+      <div class="ancho3"><label>Causal de la baja</label><select id="kCausal">${opciones(INV.cat.causales,'','Seleccione…')}</select><p class="nota" id="kAyuda"></p></div>
+      <div><label>Fecha de la baja</label><input type="date" id="kFecha" value="${hoyISO()}"></div>
+      <div><label>N.° de acta de baja</label><input id="kActa" placeholder="Ej. 64"></div>
+      <div><label>Anotación en el Libro (T/F/A)</label><input id="kAnot" placeholder="Ej. 3/12/1"></div>
+      <div class="kJunta"><label>N.° de sesión de Junta</label><input id="kSesion"></div>
+      <div class="kJunta"><label>N.° de acuerdo / artículo</label><input id="kAcuerdo"></div>
+      <div class="kJunta"><label>Fecha del acuerdo</label><input type="date" id="kFechaAc"></div>
+      <div class="ancho3 grid-form" id="kExtra" style="padding:0"></div>
+      <div class="ancho3"><label>Observaciones</label><input id="kObs" placeholder="Opcional"></div>
+    </div>`;
+  const m = modal('modalBaja', `Dar de baja · ${lista.length} bien${lista.length===1?'':'es'}`, cuerpo, '<button class="btn btn-auto btn-peligro" id="btnBajaOk">Registrar baja</button>', 860);
+  const pintarCausal = ()=>{
+    const c=$('kCausal').value, req=INV.cat.requisitos[c];
+    $('kAyuda').textContent = AYUDA_CAUSAL[c]||'';
+    m.querySelectorAll('.kJunta').forEach(x=>x.classList.toggle('oculto', !!req && !req.junta));
+    $('kExtra').innerHTML = req ? req.campos.map(k=>{ const [lab,ay]=CAMPOS_CAUSAL[k]||[k,'']; const tipo=/^Fecha/.test(k)?'date':k==='Monto'?'number':'text';
+      return `<div class="${k==='DescripcionHecho'?'ancho3':''}"><label>${lab}</label><input type="${tipo}" data-k="${k}">${ay?`<p class="nota">${ay}</p>`:''}</div>`; }).join('') : '';
+  };
+  $('kCausal').onchange=pintarCausal;
+  $('btnBajaOk').onclick = async ()=>{
+    const c=$('kCausal').value, req=INV.cat.requisitos[c];
+    if(!req) return m.msg('Seleccione la causal de la baja.','err');
+    const datos={Placas:lista.map(i=>i.Placa), Causal:c, Fecha:$('kFecha').value, Acta:$('kActa').value.trim(), AnotacionTFA:$('kAnot').value.trim(),
+      SesionJunta:$('kSesion').value.trim(), AcuerdoJunta:$('kAcuerdo').value.trim(), FechaAcuerdo:$('kFechaAc').value, Observaciones:$('kObs').value.trim()};
+    m.querySelectorAll('#kExtra [data-k]').forEach(x=>datos[x.dataset.k]=x.value.trim());
+    const faltan=[];
+    if(!datos.Acta) faltan.push('número de acta'); if(!datos.AnotacionTFA) faltan.push('anotación en el Libro');
+    if(req.junta && (!datos.SesionJunta||!datos.AcuerdoJunta)) faltan.push('sesión y acuerdo de Junta');
+    req.campos.forEach(k=>{ if(!datos[k]) faltan.push((CAMPOS_CAUSAL[k]||[k])[0].toLowerCase()); });
+    if(faltan.length) return m.msg('Complete: '+faltan.join(', ')+'.','err');
+    if(!confirm(`¿Registrar la baja de ${lista.length} bien(es) por "${c}"? Esta acción queda en el registro de movimientos.`)) return;
+    const b=$('btnBajaOk'); cargando(b,true);
+    try{
+      const r=await api('invBaja',{datos});
+      if(!r.ok){ m.msg(r.error,'err'); cargando(b,false,'Registrar baja'); return; }
+      r.items.forEach(actualizarLocal); INV.sel.clear(); m.remove(); refrescarVista();
+      aviso('Baja registrada: '+r.consecutivo);
+      docBaja(r.consecutivo,'acta');
+    }catch(e){ m.msg('No se pudo conectar con el servidor.','err'); cargando(b,false,'Registrar baja'); }
+  };
+}
+
+function formAnular(i){
+  const m = modal('modalAnular','Anular baja · '+esc(i.Placa), `<p class="nota">Use esta opción solo si la baja se registró por error. Queda un contra-registro con su justificación y el bien vuelve al inventario activo.</p>
+    <label>Justificación</label><input id="aJust" placeholder="Ej. se registró la placa equivocada; el bien está en uso en el Aula 18">`, '<button class="btn btn-auto btn-peligro" id="btnAnular">Anular baja</button>', 560);
+  $('btnAnular').onclick=async ()=>{
+    const j=$('aJust').value.trim(); if(j.length<10) return m.msg('Escriba una justificación (mínimo 10 caracteres).','err');
+    try{ const r=await api('invAnularBaja',{datos:{Placa:i.Placa,Justificacion:j}});
+      if(!r.ok) return m.msg(r.error,'err');
+      actualizarLocal(r.item); m.remove(); if($('modalBien')) $('modalBien').remove(); refrescarVista(); aviso('Baja anulada: '+i.Placa);
+    }catch(e){ m.msg('No se pudo conectar con el servidor.','err'); }
+  };
+}
+
+function abrirConfig(){
+  const c=INV.config;
+  const m = modal('modalCfg','Datos institucionales', `<p class="nota">Aparecen en el encabezado y en las firmas de boletas, actas y certificaciones.</p>
+    <div class="grid-form">${CFG_CAMPOS.map(([k,l])=>`<div class="${k==='Institucion'?'ancho2':''}"><label>${l}</label><input data-k="${k}" value="${esc(c[k]||'')}"></div>`).join('')}</div>`,
+    '<button class="btn btn-auto" id="btnCfgOk">Guardar</button>', 760);
+  $('btnCfgOk').onclick=async ()=>{
+    const datos={}; m.querySelectorAll('[data-k]').forEach(x=>datos[x.dataset.k]=x.value.trim());
+    try{ const r=await api('cfgGuardar',{datos}); if(!r.ok) return m.msg(r.error,'err'); INV.config=r.config; m.remove(); aviso('Datos institucionales guardados'); }
+    catch(e){ m.msg('No se pudo conectar con el servidor.','err'); }
+  };
+}
+
+/* ---------- Mis bienes (perfil del funcionario) ---------- */
+async function vistaMisBienes(c){
+  c.innerHTML = `<div class="encabezado fila-enc"><div><h2>Mis bienes</h2><p>Bienes institucionales asignados a su custodia.</p></div>
+    <div class="enc-acciones"><button class="btn btn-auto" id="btnMiPdf" disabled>Descargar mi inventario (PDF)</button></div></div><div id="misCuerpo"><div class="panel">Cargando…</div></div>`;
+  try{ await cargarInv(); pintarMisBienes(); }
+  catch(e){ $('misCuerpo').innerHTML = `<div class="panel">${esc(e.message||'No se pudo cargar.')}</div>`; }
+}
+
+function pintarMisBienes(){
+  const mios = INV.items.filter(i=>i.Responsable===INV.yo && i.Situacion==='Activo').sort((a,b)=>a.Placa.localeCompare(b.Placa,'es',{numeric:true}));
+  $('btnMiPdf').disabled = !mios.length;
+  $('btnMiPdf').onclick = ()=>docInventarioResponsable(INV.yo, mios);
+  $('misCuerpo').innerHTML = `<div class="kpis kpis4">${kpisHtml(mios,'Bienes a mi cargo')}</div>
+    <div class="panel">${mios.length?`<p class="nota" style="margin-bottom:12px">Toque un bien para ver su ficha, su historial o reportar una novedad.</p>
+      <div class="tabla-wrap"><table class="tinv"><thead><tr><th>Placa</th><th>Descripción del bien</th><th>Marca / Modelo</th><th>Serie</th><th>Estado</th><th>Ubicación</th></tr></thead><tbody>
+      ${mios.map(i=>`<tr data-p="${esc(i.Placa)}"><td class="placa">${esc(i.Placa)}</td><td>${esc(i.Descripcion)}</td><td>${esc([i.Marca,i.Modelo].filter(x=>x&&!/^no.?indica$/i.test(x)).join(' · ')||'—')}</td><td>${esc(i.Serie)}</td><td>${badgeEstado(i.Estado)}</td><td>${esc(i.Ubicacion)}</td></tr>`).join('')}
+      </tbody></table></div>`:'<p class="vacio">No tiene bienes asignados a su nombre. Si cree que es un error, comuníquese con la Coordinación Técnica.</p>'}</div>`;
+  $('misCuerpo').querySelectorAll('tbody tr').forEach(tr=>tr.onclick=()=>abrirBien(INV.items.find(i=>i.Placa===tr.dataset.p), true));
 }
 
 function copiar(texto, btn){
   const ok=()=>{ const t=btn.textContent; btn.textContent='Copiado ✓'; setTimeout(()=>btn.textContent=t,1500); };
   if(navigator.clipboard) navigator.clipboard.writeText(texto).then(ok).catch(()=>{});
-  else { const a=document.createElement('textarea'); a.value=texto; document.body.appendChild(a); a.select(); try{document.execCommand('copy'); ok();}catch(e){} a.remove(); }
 }
-
 function aviso(t){
   const d=document.createElement('div'); d.className='toast'; d.textContent=t; document.body.appendChild(d);
   setTimeout(()=>d.classList.add('ver'),10); setTimeout(()=>{d.classList.remove('ver'); setTimeout(()=>d.remove(),300);},2600);
 }
 
-/* ---------- Exportar a Excel (formato MEP) ---------- */
+/* =========================================================
+   DOCUMENTOS (vista imprimible → Guardar como PDF)
+   ========================================================= */
+function fechaCR(iso){ if(!iso) return '—'; const [y,m,d]=String(iso).slice(0,10).split('-'); return d?`${d}/${m}/${y}`:iso; }
+function fechaLarga(iso){ const M=['enero','febrero','marzo','abril','mayo','junio','julio','agosto','setiembre','octubre','noviembre','diciembre']; const [y,m,d]=String(iso).slice(0,10).split('-'); return `${Number(d)} de ${M[Number(m)-1]} de ${y}`; }
+function textoBaja(i){
+  return `El activo: ${i.Placa} que corresponde a: ${i.Descripcion} que consta del T.F.A.: ${i.TFA||'—'} fue dado de baja a partir del ${fechaCR(i.FechaBaja)} motivo ${(i.MotivoBaja||'').toLowerCase()} según consta en el acta #: ${i.ActaBaja} la cual se encuentra en los archivos de la institución.`;
+}
+const FUNDAMENTO = 'Ley General de Control Interno N.° 8292 (art. 8, inciso a); Normas de Control Interno para el Sector Público N-2-2009-CO-DFOE (norma 4.3); Instructivo del MEP sobre la administración de los inventarios de los centros educativos (2021); y, como referencia, el Reglamento para el Registro y Control de Bienes de la Administración Central, Decreto Ejecutivo N.° 40797-H.';
+
+function encabezadoDoc(titulo, sub){
+  const c=INV.config;
+  return `<header class="d-cab"><div class="d-esc"><svg viewBox="0 0 42 48"><path d="M21 2 L39 8 V22 C39 34 31 42 21 46 C11 42 3 34 3 22 V8 Z" fill="#C9A227"/><path d="M21 6 L35 10.5 V22 C35 32 28.5 38.5 21 41.8 C13.5 38.5 7 32 7 22 V10.5 Z" fill="#0B2A55"/><path d="M14 30 V21 M21 30 V17 M28 30 V23" stroke="#C9A227" stroke-width="3" stroke-linecap="round"/></svg></div>
+    <div class="d-inst"><b>${esc(c.Institucion||INSTITUCION)}</b><span>Ministerio de Educación Pública${c.DRE?' · Dirección Regional de Educación '+esc(c.DRE):''}${c.Circuito?' · Circuito '+esc(c.Circuito):''}</span>
+    <span>${c.CodigoPresupuestario?'Código presupuestario '+esc(c.CodigoPresupuestario)+' · ':''}Coordinación Técnica</span></div></header>
+    <h1 class="d-tit">${titulo}</h1>${sub?`<p class="d-sub">${sub}</p>`:''}`;
+}
+function firmas(lista){ return `<div class="d-firmas">${lista.map(([rol,nom])=>`<div class="d-firma"><div class="d-linea"></div><b>${esc(nom||'')}</b><span>${esc(rol)}</span><span class="d-ced">Cédula: ________________</span></div>`).join('')}</div>`; }
+function tablaDoc(cols, filas){ return `<table class="d-tab"><thead><tr>${cols.map(c=>`<th>${c}</th>`).join('')}</tr></thead><tbody>${filas.map(f=>`<tr>${f.map(v=>`<td>${v}</td>`).join('')}</tr>`).join('')}</tbody></table>`; }
+
+function abrirDoc(nombre, html){
+  const v=$('docView'); if(v) v.remove();
+  const d=document.createElement('div'); d.id='docView';
+  d.innerHTML=`<div class="doc-barra"><b>${esc(nombre)}</b><span class="flex1"></span><button class="btn btn-auto" id="docImp">Descargar PDF / Imprimir</button><button class="btn btn-auto btn-sec" id="docCerrar">Cerrar</button></div>
+    <div class="doc-lienzo"><article class="hoja">${html}<footer class="d-pie">Documento generado por la Plataforma de Coordinación Técnica · ${esc(new Date().toLocaleString('es-CR'))}</footer></article></div>`;
+  document.body.appendChild(d); document.body.classList.add('con-doc');
+  $('docCerrar').onclick=()=>{ d.remove(); document.body.classList.remove('con-doc'); document.title=TITULO_APP; };
+  $('docImp').onclick=()=>{ document.title=nombre; window.print(); };
+}
+const TITULO_APP = document.title;
+
+/* Boleta de traslado */
+async function docTraslado(cons){
+  try{
+    const r=await api('invMovimientos',{datos:{Consecutivo:cons}});
+    if(!r.ok||!r.movimientos.length) return aviso('No se encontró la boleta '+cons);
+    const mv=r.movimientos, m0=mv[0], c=INV.config;
+    const dePers=[...new Set(mv.map(x=>x.DeResponsable))], aPers=[...new Set(mv.map(x=>x.AResponsable))];
+    const html = encabezadoDoc('Formulario de control de activos<br>Traslado y asignación de custodia', `Boleta N.° <b>${esc(cons)}</b> · Fecha: ${esc(fechaCR(m0.Fecha))}`)
+      + `<p class="d-p"><b>Justificación:</b> ${esc(m0.Detalle)}</p>`
+      + tablaDoc(['#','Placa','Descripción del bien','Estado','Ubicación anterior','Responsable anterior','Nueva ubicación','Nuevo responsable'],
+          mv.map((x,k)=>[k+1,`<b>${esc(x.Placa)}</b>`,esc(x.Descripcion),esc(x.Estado||'—'),esc(x.DeUbicacion||'—'),esc(nombreDe(x.DeResponsable)),esc(x.AUbicacion||'—'),esc(nombreDe(x.AResponsable))]))
+      + `<p class="d-p">Total de bienes: <b>${mv.length}</b>.</p>
+        <p class="d-p d-decl">La persona que recibe declara haber verificado que los bienes detallados corresponden a los que efectivamente recibe, en el estado indicado, y asume su custodia, uso adecuado y la obligación de informar cualquier cambio en su estado, conforme al artículo 7 del Reglamento N.° 40797-H y al artículo 8 de la Ley General de Control Interno N.° 8292. La persona que entrega queda liberada de la custodia de los bienes aquí detallados a partir de la fecha de esta boleta.</p>`
+      + firmas([['Entrega', dePers.length===1&&dePers[0]?nombreDe(dePers[0]):(c.CoordinadorTecnico||'')], ['Recibe', aPers.length===1&&aPers[0]?nombreDe(aPers[0]):''], ['Coordinación Técnica', c.CoordinadorTecnico], ['Visto bueno · Dirección', c.Director]])
+      + `<p class="d-nota">Original: archivo de control de activos de la institución · Copia: persona responsable. Fundamento: ${FUNDAMENTO}</p>`;
+    abrirDoc('Boleta '+cons, html);
+  }catch(e){ aviso('No se pudo generar la boleta.'); }
+}
+
+/* Acta de baja y certificación de baja */
+const PARRAFO_CAUSAL = {
+  'Inservibilidad (destrucción)': d=>`Los bienes se declaran inservibles: no son aptos para el servicio ni sus partes son aprovechables. Se entregan para su disposición final a <b>${esc(d.Empresa)}</b>, empresa autorizada por el Ministerio de Salud (autorización N.° ${esc(d.PermisoSalud)}). Las placas se retiran antes de la entrega.`,
+  'Donación': d=>`Los bienes, en estricto desuso, se donan a <b>${esc(d.Donatario)}</b>, cédula jurídica ${esc(d.CedulaJuridica)}, según la nota de ofrecimiento y la aceptación por escrito que constan en el expediente.`,
+  'Venta': d=>`Los bienes se venden a <b>${esc(d.Comprador)}</b>, cédula ${esc(d.CedulaComprador)}, por la suma de ₡${esc(Number(d.Monto||0).toLocaleString('es-CR'))}, depositada en la cuenta de la Junta Administrativa según comprobante N.° ${esc(d.Comprobante)}. Se adjunta copia de la cédula del comprador.`,
+  'Caso fortuito o fuerza mayor': d=>`${esc(d.DescripcionHecho)} Se verificó el inventario físico contra el Libro de Inventarios y se elaboró el listado de los bienes destruidos o desaparecidos.`,
+  'Hurto o robo': d=>`Los bienes fueron sustraídos. Se interpuso la denuncia N.° <b>${esc(d.DenunciaOIJ)}</b> ante el Organismo de Investigación Judicial el ${esc(fechaCR(d.FechaDenuncia))}. Esta baja no exime de las responsabilidades que se determinen en el procedimiento administrativo correspondiente.`,
+  'Pérdida o desaparición': d=>`Tras una búsqueda exhaustiva, los bienes no fueron localizados. Se informó mediante el oficio N.° ${esc(d.OficioJunta)}. Esta baja no exime de las responsabilidades que se determinen en el procedimiento administrativo correspondiente.`,
+  'Exclusión de bien no patrimoniable': ()=>`Los bienes no son patrimoniables por tener una vida útil inferior a un año, por lo que se excluyen del inventario institucional. La Presidencia de la Junta informará en la siguiente sesión.`,
+  'Retiro por la FOD (PRONIE)': ()=>`Los bienes pertenecen al Programa Nacional de Informática Educativa MEP-FOD y son retirados por la Fundación Omar Dengo. Se retira la placa del centro educativo y se conserva la placa de la FOD (circular DVM-PICR-046-09-2016).`
+};
+const FIRMA_TERCERO = {'Inservibilidad (destrucción)':d=>['Representante de la empresa',d.Empresa], 'Donación':d=>['Representante del donatario',d.Donatario], 'Venta':d=>['Comprador',d.Comprador], 'Retiro por la FOD (PRONIE)':()=>['Representante de la FOD','']};
+
+async function docBaja(cons, tipo){
+  if(!cons) return aviso('Este bien fue dado de baja antes de la plataforma; no tiene acta generada aquí.');
+  try{
+    const r=await api('invMovimientos',{datos:{Consecutivo:cons}});
+    const mv=(r.movimientos||[]).filter(x=>x.Tipo==='Baja');
+    if(!r.ok||!mv.length) return aviso('No se encontró el acta '+cons);
+    let d={}; try{ d=JSON.parse(mv[0].Detalle); }catch(e){}
+    const causal=mv[0].Causal, fecha=mv[0].Fecha, c=INV.config;
+    const filas = mv.map((x,k)=>{ let dx={}; try{dx=JSON.parse(x.Detalle);}catch(e){} return {n:k+1, Placa:x.Placa, Descripcion:x.Descripcion, Marca:dx.Marca, Modelo:dx.Modelo, Serie:dx.Serie, Estado:x.Estado, TFA:dx.TFA, Ubic:x.DeUbicacion, Resp:x.DeResponsable}; });
+    const tabla = tablaDoc(['#','Placa','Descripción','Marca','Modelo','Serie','Estado','T.F.A. de registro'],
+      filas.map(f=>[f.n,`<b>${esc(f.Placa)}</b>`,esc(f.Descripcion),esc(f.Marca||'—'),esc(f.Modelo||'—'),esc(f.Serie||'—'),esc(f.Estado||'—'),esc(f.TFA||'—')]));
+    const junta = d.SesionJunta ? ` en cumplimiento del acuerdo N.° <b>${esc(d.AcuerdoJunta)}</b> de la sesión N.° <b>${esc(d.SesionJunta)}</b> de la Junta Administrativa${d.FechaAcuerdo?' del '+esc(fechaCR(d.FechaAcuerdo)):''},` : '';
+    if(tipo==='acta'){
+      const ter = FIRMA_TERCERO[causal] ? FIRMA_TERCERO[causal](d) : null;
+      const html = encabezadoDoc(`Acta de baja de bienes N.° ${esc(d.Acta)}`, `Consecutivo <b>${esc(cons)}</b> · Causal: <b>${esc(causal)}</b>`)
+        + `<p class="d-p">En ${esc(c.Institucion||INSTITUCION)}${c.Canton?', '+esc(c.Canton):''}, el ${esc(fechaLarga(fecha))}, la Dirección del centro educativo y la Presidencia de la Junta Administrativa,${junta} proceden a excluir del inventario institucional los bienes que se detallan a continuación, por la causal de <b>${esc(causal.toLowerCase())}</b>.</p>
+           <p class="d-p">${PARRAFO_CAUSAL[causal]?PARRAFO_CAUSAL[causal](d):''}</p>`
+        + tabla
+        + `<p class="d-p">Total de bienes: <b>${filas.length}</b>. La baja se anota en el Libro de Inventarios en el tomo/folio/asiento <b>${esc(d.AnotacionTFA)}</b>; los números de placa dados de baja no se reutilizan.${d.Observaciones?' Observaciones: '+esc(d.Observaciones)+'.':''}</p>
+           <p class="d-p">Se emite la presente acta en dos tantos originales${ter?', uno para el archivo de la institución y otro para '+esc(ter[0].toLowerCase()):''}.</p>`
+        + firmas([['Dirección del centro educativo', c.Director], ['Presidencia de la Junta Administrativa', c.PresidenteJunta]].concat(ter?[ter]:[]).concat([['Elaboró · Coordinación Técnica', c.CoordinadorTecnico]]))
+        + `<p class="d-nota">Fundamento: ${FUNDAMENTO}</p>`;
+      abrirDoc('Acta de baja '+d.Acta+' ('+cons+')', html);
+    } else {
+      const html = encabezadoDoc('Certificación de baja de bienes', `Referencia: acta N.° ${esc(d.Acta)} · consecutivo ${esc(cons)}`)
+        + `<p class="d-p">Quien suscribe, ${esc(c.Director||'_______________________')}, en calidad de persona directora de ${esc(c.Institucion||INSTITUCION)}${c.CodigoPresupuestario?', código presupuestario '+esc(c.CodigoPresupuestario):''},</p>
+           <p class="d-cert">CERTIFICA</p>
+           <p class="d-p">Que, según consta en el acta de baja N.° <b>${esc(d.Acta)}</b>${junta?','+junta.replace(/,$/,''):''} y en el Libro de Inventarios, tomo/folio/asiento <b>${esc(d.AnotacionTFA)}</b>, los bienes que se detallan fueron excluidos del inventario institucional a partir del ${esc(fechaLarga(fecha))}, por la causal de <b>${esc(causal.toLowerCase())}</b>:</p>`
+        + `<ol class="d-lista">${filas.map(f=>`<li>${esc(textoBaja({Placa:f.Placa,Descripcion:f.Descripcion,TFA:f.TFA,FechaBaja:fecha,MotivoBaja:causal,ActaBaja:d.Acta}))}</li>`).join('')}</ol>`
+        + `<p class="d-p">Es todo. Se extiende la presente certificación a solicitud de la parte interesada${c.Canton?', en '+esc(c.Canton):''}, el ${esc(fechaLarga(hoyISO()))}.</p>`
+        + firmas([['Dirección del centro educativo', c.Director]])
+        + `<p class="d-sello">Sello del centro educativo</p><p class="d-nota">Fundamento: ${FUNDAMENTO}</p>`;
+      abrirDoc('Certificación de baja '+cons, html);
+    }
+  }catch(e){ aviso('No se pudo generar el documento.'); }
+}
+
+/* Inventario a cargo de una persona (Reglamento 40797-H art. 7 d, e, f) */
+function docInventarioResponsable(correo, lista){
+  const c=INV.config, cnt=e=>lista.filter(i=>i.Estado===e).length;
+  const html = encabezadoDoc('Formulario de control de activos<br>Inventario a cargo del funcionario', `Fecha de corte: ${esc(fechaCR(hoyISO()))}`)
+    + `<table class="d-datos"><tr><td>Persona responsable</td><td><b>${esc(nombreDe(correo))}</b></td><td>Correo</td><td>${esc(correo)}</td></tr></table>`
+    + tablaDoc(['#','Placa','Descripción del bien','Marca','Modelo','Serie','Estado','Ubicación'],
+        lista.map((i,k)=>[k+1,`<b>${esc(i.Placa)}</b>`,esc(i.Descripcion),esc(i.Marca||'—'),esc(i.Modelo||'—'),esc(i.Serie||'—'),esc(i.Estado||'—'),esc(i.Ubicacion||'—')]))
+    + `<p class="d-p">Total: <b>${lista.length}</b> bienes · Bueno: ${cnt('Bueno')} · Regular: ${cnt('Regular')} · Malo: ${cnt('Malo')}.</p>
+       <p class="d-p d-decl">Declaro que he verificado que los bienes detallados son los que efectivamente tengo a cargo, en el estado indicado; que me comprometo a su custodia y uso adecuado; a informar de inmediato cualquier cambio en su estado o uso, así como su pérdida, daño o sustracción; y que respondo por su pérdida, daño o depreciación, salvo el deterioro natural por su uso legítimo, caso fortuito o fuerza mayor (Reglamento N.° 40797-H, art. 7; Ley General de Control Interno N.° 8292).</p>`
+    + firmas([['Persona responsable', nombreDe(correo)], ['Coordinación Técnica', c.CoordinadorTecnico], ['Dirección', c.Director]])
+    + `<p class="d-nota">Un tanto para la persona responsable y otro para el archivo de control de activos de la institución.</p>`;
+  abrirDoc('Inventario a cargo de '+nombreDe(correo), html);
+}
+
+/* Certificación del inventario (verificación de cantidad, estado y asignación) */
+function docCertInventario(lista){
+  if(!lista.length) return aviso('No hay bienes activos en la vista actual.');
+  const c=INV.config, f=INV.f, cnt=e=>lista.filter(i=>i.Estado===e).length;
+  const alcance = [f.ubic&&('ubicación '+f.ubic), f.resp&&('responsable '+(f.resp==='__sin'?'sin asignar':nombreDe(f.resp))), f.estado&&('estado '+f.estado), f.modo&&('modo '+f.modo)].filter(Boolean).join(', ') || 'inventario general de bienes activos';
+  const html = encabezadoDoc('Certificación de inventario de bienes', `Alcance: ${esc(alcance)} · Fecha de corte: ${esc(fechaCR(hoyISO()))}`)
+    + tablaDoc(['#','Placa','Descripción del bien','Marca / Modelo','Serie','Estado','Ubicación','Responsable','Modo de adquisición'],
+        lista.map((i,k)=>[k+1,`<b>${esc(i.Placa)}</b>`,esc(i.Descripcion),esc([i.Marca,i.Modelo].filter(Boolean).join(' / ')||'—'),esc(i.Serie||'—'),esc(i.Estado||'—'),esc(i.Ubicacion||'—'),esc(nombreDe(i.Responsable)),esc(i.ModoAdquisicion||'—')]))
+    + `<p class="d-p">Total: <b>${lista.length}</b> bienes · Bueno: ${cnt('Bueno')} · Regular: ${cnt('Regular')} · Malo: ${cnt('Malo')} · Sin estado: ${lista.length-cnt('Bueno')-cnt('Regular')-cnt('Malo')}.</p>
+       <p class="d-p d-decl">Se certifica que se verificó la cantidad, el estado físico, la ubicación y la asignación de los bienes detallados, y que coinciden con los registros del inventario institucional a la fecha de corte (Reglamento N.° 40797-H, art. 5 k; Normas de Control Interno, norma 4.3).</p>`
+    + firmas([['Coordinación Técnica', c.CoordinadorTecnico], ['Dirección del centro educativo', c.Director]])
+    + `<p class="d-nota">Fundamento: ${FUNDAMENTO}</p>`;
+  abrirDoc('Certificación de inventario', html);
+}
+
 /* Generador .xlsx propio (sin librerías externas): ZIP sin compresión + SpreadsheetML */
 const XL = (()=>{
   const enc = new TextEncoder();
@@ -697,17 +1073,17 @@ const XL = (()=>{
 async function exportarExcel(){
   const lista = invFiltrados();
   const act = lista.filter(i=>i.Situacion==='Activo'), baj = lista.filter(i=>i.Situacion==='Baja');
-  const filasAct = [['Número de Identificación','Descripción del bien','Marca','Modelo','Serie','ESTADO','','','SA','Modo de Adquisición','Observaciones','Ubicación Real'],
-                    ['','','','','','Bueno','Regular','Malo','','','','']]
-    .concat(act.map(i=>[i.Placa,i.Descripcion,i.Marca,i.Modelo,i.Serie,i.Estado==='Bueno'?'X':'',i.Estado==='Regular'?'X':'',i.Estado==='Malo'?'X':'',i.Ubicacion,i.ModoAdquisicion,i.Observaciones,i.UbicacionReal]));
-  const filasBaj = [['T','F','A','Número de Identificación','Descripción del bien','Ubicación','Modo de Adquisición','Acta','Fecha de baja','Motivo','Texto de baja']]
-    .concat(baj.map(i=>{ const [t,f,a]=(i.TFA||'').split('/'); return [t||'',f||'',a||'',i.Placa,i.Descripcion,i.Ubicacion,i.ModoAdquisicion,i.ActaBaja,fechaCR(i.FechaBaja),i.MotivoBaja,textoBaja(i)]; }));
+  const filasAct = [['Número de Identificación','Descripción del bien','Marca','Modelo','Serie','ESTADO','','','SA','Modo de Adquisición','Observaciones','Ubicación Real','Responsable'],
+                    ['','','','','','Bueno','Regular','Malo','','','','','']]
+    .concat(act.map(i=>[i.Placa,i.Descripcion,i.Marca,i.Modelo,i.Serie,i.Estado==='Bueno'?'X':'',i.Estado==='Regular'?'X':'',i.Estado==='Malo'?'X':'',i.Ubicacion,i.ModoAdquisicion,i.Observaciones,i.UbicacionReal,i.Responsable?nombreDe(i.Responsable):'']));
+  const filasBaj = [['T','F','A','Número de Identificación','Descripción del bien','Ubicación','Modo de Adquisición','Acta','Fecha de baja','Causal','Consecutivo','Texto de baja']]
+    .concat(baj.map(i=>{ const [t,f,a]=(i.TFA||'').split('/'); return [t||'',f||'',a||'',i.Placa,i.Descripcion,i.Ubicacion,i.ModoAdquisicion,i.ActaBaja,fechaCR(i.FechaBaja),i.MotivoBaja,i.ConsecutivoBaja||'',textoBaja(i)]; }));
   const nombre = 'Inventario_'+(INV.f.ubic||'General').replace(/\s+/g,'_')+'_'+new Date().toISOString().slice(0,10);
   const hojas = [{nombre:'Inventario activo', filas:filasAct, encabezado:2, centrar:[0,5,6,7],
-      anchos:[16,32,16,16,20,8,9,8,12,20,26,24],
-      combinar:['F1:H1','A1:A2','B1:B2','C1:C2','D1:D2','E1:E2','I1:I2','J1:J2','K1:K2','L1:L2']}];
+      anchos:[16,32,16,16,20,8,9,8,12,20,26,24,26],
+      combinar:['F1:H1','A1:A2','B1:B2','C1:C2','D1:D2','E1:E2','I1:I2','J1:J2','K1:K2','L1:L2','M1:M2']}];
   if(baj.length) hojas.push({nombre:'Bajas', filas:filasBaj, encabezado:1, centrar:[0,1,2,3,7,8],
-      anchos:[5,5,5,16,30,12,20,8,12,14,95]});
+      anchos:[5,5,5,16,30,12,20,8,12,22,14,95]});
   XL.libro(hojas, nombre);
   aviso('Excel descargado: '+act.length+' activos'+(baj.length?' y '+baj.length+' bajas':''));
 }

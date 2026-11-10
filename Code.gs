@@ -30,12 +30,15 @@ const HOJAS = {
   Sesiones: ['Token', 'Correo', 'Expira', 'Creado'],
   Bitacora: ['Fecha', 'Correo', 'Accion', 'Detalle'],
   Inventario: ['Placa', 'Descripcion', 'Marca', 'Modelo', 'Serie', 'Estado', 'Ubicacion', 'UbicacionReal', 'Especialidad',
-               'ModoAdquisicion', 'TFA', 'Observaciones', 'Situacion', 'FechaBaja', 'MotivoBaja', 'ActaBaja', 'Actualizado', 'ActualizadoPor']
+               'ModoAdquisicion', 'TFA', 'Observaciones', 'Situacion', 'FechaBaja', 'MotivoBaja', 'ActaBaja', 'Actualizado', 'ActualizadoPor',
+               'Responsable', 'FechaIngreso', 'ConsecutivoBaja'],
+  Movimientos: ['Consecutivo', 'Fecha', 'Tipo', 'Placa', 'Descripcion', 'Estado', 'DeUbicacion', 'AUbicacion', 'DeResponsable',
+                'AResponsable', 'Causal', 'Detalle', 'RegistradoPor', 'Registrado'],
+  Config: ['Clave', 'Valor']
 };
 
 const ESTADOS = ['Bueno', 'Regular', 'Malo'];
 const MODOS = ['Ley 7372', 'Donación MEP', 'Donación', 'Fondos Propios', 'Llave en mano DIEE', 'Otro'];
-const MOTIVOS = ['Inservible', 'Obsoleto', 'Robo o hurto', 'Extravío', 'Traslado a otra institución', 'Otro'];
 
 /* ============ INSTALACIÓN (ejecutar UNA vez desde el editor) ============ */
 function setup() {
@@ -72,9 +75,13 @@ function doPost(e) {
       case 'listarUsuarios':  return json(conSesion(body, () => listarUsuarios(), true));
       case 'guardarUsuario':  return json(conSesion(body, u => guardarUsuario(u, body.datos || {}), true));
       case 'invListar':       return json(conSesion(body, u => invListar(u)));
-      case 'invGuardar':      return json(conSesion(body, u => invGuardar(u, body.datos || {})));
+      case 'invMovimientos':  return json(conSesion(body, u => invMovimientos(u, body.datos || {})));
+      case 'invReporte':      return json(conSesion(body, u => invReporte(u, body.datos || {})));
+      case 'invGuardar':      return json(conSesion(body, u => invGuardar(u, body.datos || {}), true));
+      case 'invTraslado':     return json(conSesion(body, u => invTraslado(u, body.datos || {}), true));
       case 'invBaja':         return json(conSesion(body, u => invBaja(u, body.datos || {}), true));
-      case 'invRevertir':     return json(conSesion(body, u => invRevertir(u, body.datos || {}), true));
+      case 'invAnularBaja':   return json(conSesion(body, u => invAnularBaja(u, body.datos || {}), true));
+      case 'cfgGuardar':      return json(conSesion(body, u => cfgGuardar(u, body.datos || {}), true));
       default:                return json({ ok: false, error: 'Acción no reconocida.' });
     }
   } catch (err) {
@@ -196,8 +203,35 @@ function guardarUsuario(admin, d) {
   return listarUsuarios();
 }
 
-/* ============ INVENTARIO ============ */
-function puedeEditar(u) { return u.Rol === 'Administrador' || u.Rol === 'Docente técnico'; }
+/* ============ INVENTARIO ============
+ * Base normativa aplicada:
+ *  - Ley General de Control Interno N.° 8292, art. 8 a): proteger y conservar el patrimonio público.
+ *  - Normas de Control Interno para el Sector Público (N-2-2009-CO-DFOE), norma 4.3 Protección y conservación del patrimonio.
+ *  - Instructivo MEP (2021) "Temas adicionales a considerar en la administración de los inventarios de los centros educativos":
+ *    Libro de Inventarios (T.F.A.), acuerdo de Junta, actas en dos originales, placas no reutilizables.
+ *  - Reglamento 40797-H (referencia): art. 7 deberes del funcionario a cargo, art. 42 traslados, arts. 22, 25, 27, 30 bajas.
+ */
+
+// Requisitos por causal de baja (campos obligatorios además de los comunes)
+const CAUSALES = {
+  'Inservibilidad (destrucción)':      { junta: true,  campos: ['Empresa', 'PermisoSalud'] },
+  'Donación':                          { junta: true,  campos: ['Donatario', 'CedulaJuridica'] },
+  'Venta':                             { junta: true,  campos: ['Comprador', 'CedulaComprador', 'Monto', 'Comprobante'] },
+  'Caso fortuito o fuerza mayor':      { junta: true,  campos: ['DescripcionHecho'] },
+  'Hurto o robo':                      { junta: true,  campos: ['DenunciaOIJ', 'FechaDenuncia'] },
+  'Pérdida o desaparición':            { junta: true,  campos: ['OficioJunta'] },
+  'Exclusión de bien no patrimoniable':{ junta: false, campos: [] },
+  'Retiro por la FOD (PRONIE)':        { junta: false, campos: [] }
+};
+const ROLES_LECTURA_TOTAL = ['Administrador', 'Dirección', 'Junta Administrativa', 'Contabilidad'];
+const CFG_CLAVES = ['Institucion', 'CodigoPresupuestario', 'DRE', 'Circuito', 'Canton', 'Director', 'PresidenteJunta', 'CoordinadorTecnico'];
+
+function esAdminU(u) { return u.Rol === 'Administrador'; }
+function veTodo(u) { return ROLES_LECTURA_TOTAL.indexOf(u.Rol) >= 0; }
+function hoyCR() { return Utilities.formatDate(new Date(), 'America/Costa_Rica', 'yyyy-MM-dd'); }
+function ahoraCR() { return Utilities.formatDate(new Date(), 'America/Costa_Rica', 'yyyy-MM-dd HH:mm'); }
+function txt(v, max) { return String(v == null ? '' : v).replace(/\s+/g, ' ').trim().slice(0, max || 200); }
+function fechaOk(f) { return /^\d{4}-\d{2}-\d{2}$/.test(String(f || '')); }
 
 function invPub(r) {
   const o = {};
@@ -205,74 +239,210 @@ function invPub(r) {
     const v = r[c];
     o[c] = v instanceof Date ? Utilities.formatDate(v, 'America/Costa_Rica', 'yyyy-MM-dd') : String(v == null ? '' : v).trim();
   });
+  o.Responsable = o.Responsable.toLowerCase();
   return o;
 }
 
-function invListar(u) {
-  return {
-    ok: true, puedeEditar: puedeEditar(u), esAdmin: u.Rol === 'Administrador',
-    items: filas('Inventario').map(invPub),
-    catalogos: { estados: ESTADOS, modos: MODOS, motivos: MOTIVOS }
-  };
+function leerConfig() {
+  const c = {};
+  filas('Config').forEach(r => c[r.Clave] = String(r.Valor == null ? '' : r.Valor));
+  return c;
 }
 
-function invBuscar(placa) { return filas('Inventario').find(r => String(r.Placa).trim() === placa) || null; }
+function nombresUsuarios() {
+  const m = {};
+  filas('Usuarios').forEach(r => m[norm(r.Correo)] = r.Nombre);
+  return m;
+}
+
+function invListar(u) {
+  const todos = filas('Inventario').map(invPub);
+  const items = veTodo(u) ? todos : todos.filter(i => i.Responsable === u.Correo);
+  const res = {
+    ok: true, esAdmin: esAdminU(u), veTodo: veTodo(u), yo: u.Correo,
+    items: items, config: leerConfig(), nombres: nombresUsuarios(),
+    catalogos: { estados: ESTADOS, modos: MODOS, causales: Object.keys(CAUSALES), requisitos: CAUSALES }
+  };
+  if (esAdminU(u)) res.usuarios = filas('Usuarios').filter(r => r.Activo === 'SI').map(r => ({ correo: norm(r.Correo), nombre: r.Nombre, rol: r.Rol }));
+  return res;
+}
+
+function invBuscarFila(placa, todas) { return (todas || filas('Inventario')).find(r => String(r.Placa).trim() === placa) || null; }
 
 function invEscribir(fila, o, quien) {
-  o.Actualizado = Utilities.formatDate(new Date(), 'America/Costa_Rica', 'yyyy-MM-dd HH:mm');
+  o.Actualizado = ahoraCR();
   o.ActualizadoPor = quien;
-  const vals = [HOJAS.Inventario.map(c => String(o[c] == null ? '' : o[c]))];
   const h = hoja('Inventario');
+  const vals = [encabezado(h).map(c => String(o[c] == null ? '' : o[c]))];
   if (fila) h.getRange(fila, 1, 1, vals[0].length).setValues(vals);
   else { capacidad(h, 1); h.getRange(h.getLastRow() + 1, 1, 1, vals[0].length).setValues(vals); }
   return invPub(o);
 }
 
-function txt(v, max) { return String(v == null ? '' : v).replace(/\s+/g, ' ').trim().slice(0, max || 200); }
+function registrarMov(m, quien) {
+  const h = hoja('Movimientos');
+  h.appendRow(encabezado(h).map(c => c === 'RegistradoPor' ? quien : c === 'Registrado' ? ahoraCR() : String(m[c] == null ? '' : m[c])));
+}
 
+function siguienteConsecutivo(prefijo, fecha) {
+  const anio = String(fecha || hoyCR()).slice(0, 4);
+  const base = prefijo + '-' + anio + '-';
+  let max = 0;
+  filas('Movimientos').forEach(r => {
+    const c = String(r.Consecutivo || '');
+    if (c.indexOf(base) === 0) max = Math.max(max, Number(c.slice(base.length)) || 0);
+  });
+  return base + ('000' + (max + 1)).slice(-4);
+}
+
+/* Alta y modificación de datos descriptivos (solo Administrador / Coordinación Técnica).
+   La ubicación y el responsable solo cambian mediante traslado, para dejar trazabilidad. */
 function invGuardar(u, d) {
-  if (!puedeEditar(u)) return { ok: false, error: 'Su rol solo permite consultar el inventario.' };
   const placa = txt(d.Placa, 20);
   if (!/^\d{4}-\d{1,6}$/.test(placa)) return { ok: false, error: 'La placa debe tener el formato 6526-0000.' };
   if (!txt(d.Descripcion)) return { ok: false, error: 'Indique la descripción del bien.' };
-  const ex = invBuscar(placa);
-  if (d.nuevo && ex) return { ok: false, error: 'Ya existe un bien con la placa ' + placa + (ex.Situacion === 'Baja' ? ' (dado de baja).' : '.') };
+  const ex = invBuscarFila(placa);
+  if (d.nuevo && ex) return { ok: false, error: 'La placa ' + placa + ' ya existe' + (ex.Situacion === 'Baja' ? ' y fue dada de baja. Las placas dadas de baja no se reutilizan.' : '.') };
   if (!d.nuevo && !ex) return { ok: false, error: 'No se encontró la placa ' + placa + '.' };
-  if (ex && ex.Situacion === 'Baja') return { ok: false, error: 'Un bien dado de baja no se puede editar.' };
-  const o = ex ? invPub(ex) : { Situacion: 'Activo', FechaBaja: '', MotivoBaja: '', ActaBaja: '' };
+  if (ex && ex.Situacion === 'Baja') return { ok: false, error: 'Un bien dado de baja no se puede modificar.' };
+  const antes = ex ? invPub(ex) : null;
+  const o = antes ? Object.assign({}, antes) : { Situacion: 'Activo', FechaBaja: '', MotivoBaja: '', ActaBaja: '', ConsecutivoBaja: '' };
   o.Placa = placa;
-  ['Descripcion', 'Marca', 'Modelo', 'Serie', 'Ubicacion', 'UbicacionReal', 'Especialidad', 'TFA'].forEach(c => o[c] = txt(d[c]));
+  ['Descripcion', 'Marca', 'Modelo', 'Serie', 'Especialidad', 'TFA'].forEach(c => o[c] = txt(d[c]));
   o.Observaciones = txt(d.Observaciones, 500);
   o.Estado = ESTADOS.indexOf(d.Estado) >= 0 ? d.Estado : '';
   o.ModoAdquisicion = MODOS.indexOf(d.ModoAdquisicion) >= 0 ? d.ModoAdquisicion : txt(d.ModoAdquisicion);
+  if (!ex) {
+    o.Ubicacion = txt(d.Ubicacion); o.UbicacionReal = txt(d.UbicacionReal);
+    o.Responsable = norm(d.Responsable);
+    if (o.Responsable && !usuarioActivo(o.Responsable)) return { ok: false, error: 'El responsable debe ser un usuario activo.' };
+    o.FechaIngreso = fechaOk(d.FechaIngreso) ? d.FechaIngreso : hoyCR();
+  }
   const item = invEscribir(ex ? ex._fila : null, o, u.Correo);
-  bitacora(u.Correo, ex ? 'inv_editado' : 'inv_agregado', placa + ' · ' + o.Descripcion);
+  if (!ex) {
+    registrarMov({ Fecha: o.FechaIngreso, Tipo: 'Alta', Placa: placa, Descripcion: o.Descripcion, Estado: o.Estado,
+      AUbicacion: o.Ubicacion, AResponsable: o.Responsable, Causal: o.ModoAdquisicion, Detalle: 'T.F.A. ' + (o.TFA || '—') }, u.Correo);
+  } else {
+    const cambios = ['Descripcion', 'Marca', 'Modelo', 'Serie', 'Estado', 'Especialidad', 'ModoAdquisicion', 'TFA', 'Observaciones']
+      .filter(c => String(antes[c]) !== String(o[c])).map(c => c + ': "' + antes[c] + '" → "' + o[c] + '"');
+    if (cambios.length) registrarMov({ Fecha: hoyCR(), Tipo: 'Modificación', Placa: placa, Descripcion: o.Descripcion, Estado: o.Estado,
+      DeUbicacion: o.Ubicacion, AUbicacion: o.Ubicacion, DeResponsable: o.Responsable, AResponsable: o.Responsable, Detalle: cambios.join('; ') }, u.Correo);
+  }
+  bitacora(u.Correo, ex ? 'inv_editado' : 'inv_agregado', placa);
   return { ok: true, item: item };
 }
 
+function usuarioActivo(correo) { const x = buscarUsuario(norm(correo)); return x && x.Activo === 'SI' ? x : null; }
+
+/* Traslado / asignación de custodia (Reglamento 40797-H art. 42; art. 7: responsabilidad del funcionario a cargo) */
+function invTraslado(u, d) {
+  const placas = (d.Placas || []).map(p => txt(p, 20)).filter(Boolean);
+  if (!placas.length) return { ok: false, error: 'Seleccione al menos un bien.' };
+  if (!fechaOk(d.Fecha)) return { ok: false, error: 'Indique la fecha del traslado.' };
+  if (!txt(d.Motivo)) return { ok: false, error: 'Indique la justificación del traslado.' };
+  const cambiaResp = Object.prototype.hasOwnProperty.call(d, 'AResponsable');
+  const nuevoResp = norm(d.AResponsable);
+  if (cambiaResp && nuevoResp && !usuarioActivo(nuevoResp)) return { ok: false, error: 'El nuevo responsable debe ser un usuario activo.' };
+  if (!txt(d.AUbicacion) && !cambiaResp) return { ok: false, error: 'Indique la nueva ubicación o el nuevo responsable.' };
+  const todas = filas('Inventario');
+  const sel = placas.map(p => invBuscarFila(p, todas));
+  const falta = placas.filter((p, k) => !sel[k] || sel[k].Situacion === 'Baja');
+  if (falta.length) return { ok: false, error: 'No se pueden trasladar (no existen o están de baja): ' + falta.join(', ') };
+  const cons = siguienteConsecutivo('TR', d.Fecha);
+  const items = sel.map(r => {
+    const o = invPub(r), de = { u: o.Ubicacion, r: o.Responsable };
+    if (txt(d.AUbicacion)) { o.Ubicacion = txt(d.AUbicacion); o.UbicacionReal = txt(d.AUbicacionReal) || o.UbicacionReal; }
+    if (cambiaResp) o.Responsable = nuevoResp;
+    const it = invEscribir(r._fila, o, u.Correo);
+    registrarMov({ Consecutivo: cons, Fecha: d.Fecha, Tipo: 'Traslado', Placa: o.Placa, Descripcion: o.Descripcion, Estado: o.Estado,
+      DeUbicacion: de.u, AUbicacion: o.Ubicacion, DeResponsable: de.r, AResponsable: o.Responsable, Detalle: txt(d.Motivo, 500) }, u.Correo);
+    return it;
+  });
+  bitacora(u.Correo, 'inv_traslado', cons + ' · ' + placas.length + ' bienes');
+  return { ok: true, consecutivo: cons, items: items };
+}
+
+/* Baja por causal (Instructivo MEP 2021; Reglamento 40797-H arts. 20-30 como referencia) */
 function invBaja(u, d) {
-  const ex = invBuscar(txt(d.Placa, 20));
-  if (!ex) return { ok: false, error: 'No se encontró la placa.' };
-  if (ex.Situacion === 'Baja') return { ok: false, error: 'Ese bien ya está dado de baja.' };
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(String(d.FechaBaja || ''))) return { ok: false, error: 'Indique la fecha de la baja.' };
-  if (MOTIVOS.indexOf(d.MotivoBaja) < 0) return { ok: false, error: 'Seleccione el motivo.' };
-  if (!txt(d.ActaBaja)) return { ok: false, error: 'Indique el número de acta.' };
-  const o = invPub(ex);
-  o.Situacion = 'Baja'; o.FechaBaja = d.FechaBaja; o.MotivoBaja = d.MotivoBaja; o.ActaBaja = txt(d.ActaBaja, 30);
-  if (txt(d.TFA)) o.TFA = txt(d.TFA, 30);
-  const item = invEscribir(ex._fila, o, u.Correo);
-  bitacora(u.Correo, 'inv_baja', o.Placa + ' · acta ' + o.ActaBaja + ' · ' + o.MotivoBaja);
-  return { ok: true, item: item };
+  const placas = (d.Placas || []).map(p => txt(p, 20)).filter(Boolean);
+  const causal = d.Causal;
+  const req = CAUSALES[causal];
+  if (!placas.length) return { ok: false, error: 'Seleccione al menos un bien.' };
+  if (!req) return { ok: false, error: 'Seleccione la causal de la baja.' };
+  if (!fechaOk(d.Fecha)) return { ok: false, error: 'Indique la fecha de la baja.' };
+  if (!txt(d.Acta)) return { ok: false, error: 'Indique el número de acta.' };
+  if (!txt(d.AnotacionTFA)) return { ok: false, error: 'Indique el tomo/folio/asiento donde se anota la baja en el Libro de Inventarios.' };
+  if (req.junta && (!txt(d.SesionJunta) || !txt(d.AcuerdoJunta))) return { ok: false, error: 'Esta causal requiere el número de sesión y de acuerdo de la Junta Administrativa.' };
+  const faltan = req.campos.filter(c => !txt(d[c]));
+  if (faltan.length) return { ok: false, error: 'Faltan datos obligatorios para esta causal: ' + faltan.join(', ') + '.' };
+  const todas = filas('Inventario');
+  const sel = placas.map(p => invBuscarFila(p, todas));
+  const mal = placas.filter((p, k) => !sel[k] || sel[k].Situacion === 'Baja');
+  if (mal.length) return { ok: false, error: 'No se pueden dar de baja (no existen o ya están de baja): ' + mal.join(', ') };
+  const detalle = {};
+  ['SesionJunta', 'AcuerdoJunta', 'FechaAcuerdo', 'AnotacionTFA', 'Observaciones'].concat(req.campos).forEach(c => detalle[c] = txt(d[c], 500));
+  const cons = siguienteConsecutivo('BJ', d.Fecha);
+  const items = sel.map(r => {
+    const o = invPub(r);
+    o.Situacion = 'Baja'; o.FechaBaja = d.Fecha; o.MotivoBaja = causal; o.ActaBaja = txt(d.Acta, 30); o.ConsecutivoBaja = cons;
+    const it = invEscribir(r._fila, o, u.Correo);
+    registrarMov({ Consecutivo: cons, Fecha: d.Fecha, Tipo: 'Baja', Placa: o.Placa, Descripcion: o.Descripcion, Estado: o.Estado,
+      DeUbicacion: o.Ubicacion, DeResponsable: o.Responsable, Causal: causal,
+      Detalle: JSON.stringify(Object.assign({ Acta: o.ActaBaja, TFA: o.TFA, Marca: o.Marca, Modelo: o.Modelo, Serie: o.Serie }, detalle)) }, u.Correo);
+    return it;
+  });
+  bitacora(u.Correo, 'inv_baja', cons + ' · ' + causal + ' · acta ' + d.Acta + ' · ' + placas.length + ' bienes');
+  return { ok: true, consecutivo: cons, items: items };
 }
 
-function invRevertir(u, d) {
-  const ex = invBuscar(txt(d.Placa, 20));
-  if (!ex || ex.Situacion !== 'Baja') return { ok: false, error: 'Ese bien no está dado de baja.' };
-  const o = invPub(ex);
-  o.Situacion = 'Activo'; o.FechaBaja = ''; o.MotivoBaja = ''; o.ActaBaja = '';
-  const item = invEscribir(ex._fila, o, u.Correo);
-  bitacora(u.Correo, 'inv_baja_revertida', o.Placa);
-  return { ok: true, item: item };
+/* Anulación de una baja registrada por error: queda como contra-asiento con justificación */
+function invAnularBaja(u, d) {
+  const r = invBuscarFila(txt(d.Placa, 20));
+  if (!r || r.Situacion !== 'Baja') return { ok: false, error: 'Ese bien no está dado de baja.' };
+  if (txt(d.Justificacion).length < 10) return { ok: false, error: 'Escriba la justificación de la anulación (mínimo 10 caracteres).' };
+  const o = invPub(r), previa = o.ConsecutivoBaja;
+  o.Situacion = 'Activo'; o.FechaBaja = ''; o.MotivoBaja = ''; o.ActaBaja = ''; o.ConsecutivoBaja = '';
+  const it = invEscribir(r._fila, o, u.Correo);
+  registrarMov({ Consecutivo: siguienteConsecutivo('AN'), Fecha: hoyCR(), Tipo: 'Anulación de baja', Placa: o.Placa, Descripcion: o.Descripcion,
+    Estado: o.Estado, AUbicacion: o.Ubicacion, AResponsable: o.Responsable, Detalle: 'Anula ' + previa + '. ' + txt(d.Justificacion, 500) }, u.Correo);
+  bitacora(u.Correo, 'inv_baja_anulada', o.Placa + ' · ' + previa);
+  return { ok: true, item: it };
+}
+
+/* El funcionario a cargo informa cambios en el estado o uso del bien (Reglamento 40797-H art. 7 k) */
+function invReporte(u, d) {
+  const r = invBuscarFila(txt(d.Placa, 20));
+  if (!r || r.Situacion === 'Baja') return { ok: false, error: 'Bien no encontrado.' };
+  const o = invPub(r);
+  if (o.Responsable !== u.Correo && !esAdminU(u)) return { ok: false, error: 'Solo la persona responsable del bien puede reportarlo.' };
+  if (ESTADOS.indexOf(d.EstadoReportado) < 0) return { ok: false, error: 'Indique el estado actual del bien.' };
+  if (!txt(d.Detalle)) return { ok: false, error: 'Describa la situación.' };
+  registrarMov({ Fecha: hoyCR(), Tipo: 'Reporte del responsable', Placa: o.Placa, Descripcion: o.Descripcion, Estado: d.EstadoReportado,
+    DeUbicacion: o.Ubicacion, DeResponsable: o.Responsable, Detalle: txt(d.Detalle, 500) }, u.Correo);
+  bitacora(u.Correo, 'inv_reporte', o.Placa);
+  return { ok: true };
+}
+
+function invMovimientos(u, d) {
+  let movs = filas('Movimientos').map(r => { const o = {}; HOJAS.Movimientos.forEach(c => o[c] = r[c] instanceof Date ? Utilities.formatDate(r[c], 'America/Costa_Rica', 'yyyy-MM-dd') : String(r[c] == null ? '' : r[c])); return o; });
+  if (d.Placa) movs = movs.filter(m => m.Placa === txt(d.Placa, 20));
+  if (d.Consecutivo) movs = movs.filter(m => m.Consecutivo === txt(d.Consecutivo, 20));
+  if (!d.Placa && !d.Consecutivo && !veTodo(u)) return { ok: false, error: 'Sin permiso.' };
+  if (!veTodo(u)) {
+    const mias = {}; filas('Inventario').forEach(r => { if (norm(r.Responsable) === u.Correo) mias[String(r.Placa).trim()] = true; });
+    movs = movs.filter(m => mias[m.Placa]);
+  }
+  return { ok: true, movimientos: movs };
+}
+
+function cfgGuardar(u, d) {
+  const h = hoja('Config'); const actual = filas('Config');
+  CFG_CLAVES.forEach(k => {
+    const v = txt(d[k], 150); const r = actual.find(x => x.Clave === k);
+    if (r) h.getRange(r._fila, 2).setValue(v); else h.appendRow([k, v]);
+  });
+  bitacora(u.Correo, 'config', 'Datos institucionales');
+  return { ok: true, config: leerConfig() };
 }
 
 /** Ejecutar UNA vez desde el editor: carga el inventario actual (activos y bajas). No duplica placas. */
@@ -281,33 +451,37 @@ function importarInventarioInicial() {
   const enc = origen.shift();
   const yaEstan = {};
   filas('Inventario').forEach(r => yaEstan[String(r.Placa).trim()] = true);
-  const ahora = Utilities.formatDate(new Date(), 'America/Costa_Rica', 'yyyy-MM-dd HH:mm');
+  const ahora = ahoraCR();
   const nuevas = [];
   origen.forEach(f => {
     const o = {}; enc.forEach((c, j) => o[c] = String(f[j] || '').trim());
     if (!o.Placa || yaEstan[o.Placa]) return;
     yaEstan[o.Placa] = true;
     o.Actualizado = ahora; o.ActualizadoPor = 'importación';
-    nuevas.push(HOJAS.Inventario.map(c => o[c] || ''));
+    nuevas.push(o);
   });
   const h = hoja('Inventario');
-  if (nuevas.length) capacidad(h, nuevas.length);
-  if (nuevas.length) h.getRange(h.getLastRow() + 1, 1, nuevas.length, HOJAS.Inventario.length).setValues(nuevas);
+  const enc2 = encabezado(h);
+  const matriz = nuevas.map(o => enc2.map(c => o[c] || ''));
+  if (matriz.length) { capacidad(h, matriz.length); h.getRange(h.getLastRow() + 1, 1, matriz.length, enc2.length).setValues(matriz); }
   bitacora('', 'inv_importacion', nuevas.length + ' bienes');
   Logger.log('Importados: ' + nuevas.length + ' bienes.');
 }
 
 /* ============ UTILIDADES ============ */
+function encabezado(h) { return h.getRange(1, 1, 1, h.getLastColumn()).getValues()[0].map(String); }
+
 // Asegura filas libres (en formato texto) al final de la hoja de inventario
 function capacidad(h, n) {
   const faltan = h.getLastRow() + n - h.getMaxRows();
   if (faltan > 0) {
     h.insertRowsAfter(h.getMaxRows(), faltan + 200);
-    h.getRange(1, 1, h.getMaxRows(), HOJAS.Inventario.length).setNumberFormat('@');
+    h.getRange(1, 1, h.getMaxRows(), h.getLastColumn()).setNumberFormat('@');
   }
 }
 
 let _ss = null;
+const _migradas = {};
 function hoja(n) {
   if (!_ss) _ss = SpreadsheetApp.openById(SHEET_ID);
   let h = _ss.getSheetByName(n);
@@ -319,6 +493,16 @@ function hoja(n) {
     h.appendRow(HOJAS[n]);
     h.getRange(1, 1, 1, HOJAS[n].length).setFontWeight('bold').setBackground('#0B2A55').setFontColor('#FFFFFF');
     h.setFrozenRows(1);
+  } else if (h && HOJAS[n] && !_migradas[n]) {
+    // Agrega al final las columnas nuevas que falten (actualización de versiones anteriores)
+    const enc = h.getRange(1, 1, 1, Math.max(h.getLastColumn(), 1)).getValues()[0].map(String);
+    const faltan = HOJAS[n].filter(c => enc.indexOf(c) < 0);
+    if (faltan.length) {
+      if (h.getMaxColumns() < enc.length + faltan.length) h.insertColumnsAfter(h.getMaxColumns(), faltan.length);
+      h.getRange(1, enc.length + 1, 1, faltan.length).setValues([faltan]).setFontWeight('bold').setBackground('#0B2A55').setFontColor('#FFFFFF');
+      if (n === 'Inventario') h.getRange(1, enc.length + 1, h.getMaxRows(), faltan.length).setNumberFormat('@');
+    }
+    _migradas[n] = true;
   }
   return h;
 }
