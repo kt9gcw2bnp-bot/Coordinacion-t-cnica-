@@ -610,3 +610,19 @@ function bitacora(correo, accion, detalle) {
 function json(o) {
   return ContentService.createTextOutput(JSON.stringify(o)).setMimeType(ContentService.MimeType.JSON);
 }
+
+/**
+ * Ejecutar desde el editor SOLO si se quiere empezar de cero.
+ * Guarda primero una copia de respaldo de toda la hoja en su Drive y luego
+ * borra los bienes y su historial (Inventario y Movimientos). No toca Usuarios ni Datos institucionales.
+ */
+function borrarInventario() {
+  const ss = SpreadsheetApp.openById(SHEET_ID);
+  const copia = ss.copy('Respaldo inventario ' + ahoraCR());
+  ['Inventario', 'Movimientos'].forEach(n => {
+    const h = ss.getSheetByName(n);
+    if (h && h.getLastRow() > 1) h.deleteRows(2, h.getLastRow() - 1);
+  });
+  bitacora('', 'inv_borrado_total', 'Respaldo: ' + copia.getName());
+  Logger.log('Inventario borrado. Respaldo guardado en Drive: "' + copia.getName() + '"');
+}
