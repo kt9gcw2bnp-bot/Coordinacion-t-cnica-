@@ -25,7 +25,7 @@ const CONFIG = {
 const ROLES = ['Administrador', 'Dirección', 'Docente técnico', 'Junta Administrativa', 'Contabilidad'];
 
 const HOJAS = {
-  Usuarios: ['Correo', 'Nombre', 'Rol', 'Activo', 'Creado', 'CreadoPor', 'UltimoIngreso'],
+  Usuarios: ['Correo', 'Nombre', 'Rol', 'Activo', 'Creado', 'CreadoPor', 'UltimoIngreso', 'Espacios'],
   Codigos: ['Correo', 'Hash', 'Expira', 'Intentos', 'Creado'],
   Sesiones: ['Token', 'Correo', 'Expira', 'Creado'],
   Bitacora: ['Fecha', 'Correo', 'Accion', 'Detalle'],
@@ -202,8 +202,19 @@ function cerrarSesion(body) {
 
 /* ============ USUARIOS (solo administrador) ============ */
 function listarUsuarios() {
-  return { ok: true, roles: ROLES, usuarios: filas('Usuarios').map(publico) };
+  hoja('Usuarios');  // asegura la columna Espacios en hojas anteriores
+  return { ok: true, roles: ROLES, usuarios: filas('Usuarios').map(publico), espacios: catalogoEspacios() };
 }
+
+/* Espacios físicos conocidos: aulas del inventario, de la bitácora y los ya asignados */
+function catalogoEspacios() {
+  const m = {};
+  filas('Inventario').forEach(r => { if (r.Situacion !== 'Baja' && String(r.Ubicacion || '').trim()) m[String(r.Ubicacion).trim()] = true; });
+  filas('BitacoraEspacios').forEach(r => { if (String(r.Espacio || '').trim()) m[String(r.Espacio).trim()] = true; });
+  filas('Usuarios').forEach(r => espaciosAsignados(r).forEach(e => m[e] = true));
+  return Object.keys(m).sort((a, b) => a.localeCompare(b, 'es', { numeric: true }));
+}
+function espaciosAsignados(u) { return String(u.Espacios || '').split('|').map(e => e.trim()).filter(Boolean); }
 
 function guardarUsuario(admin, d) {
   const correo = norm(d.correo);
@@ -215,16 +226,20 @@ function guardarUsuario(admin, d) {
   if (correo === admin.Correo && (activo === 'NO' || rol !== 'Administrador')) {
     return { ok: false, error: 'No puede quitarse a sí mismo el acceso de administrador.' };
   }
-  const h = hoja('Usuarios');
+  const espacios = [...new Set((Array.isArray(d.espacios) ? d.espacios : []).map(e => txt(e, 80)).filter(Boolean))].join('|');
+  const h = hoja('Usuarios'), enc = encab('Usuarios');
   const u = buscarUsuario(correo);
   if (u) {
-    h.getRange(u._fila, 2, 1, 3).setValues([[nombre, rol, activo]]);
+    const o = {}; enc.forEach(c => o[c] = u[c]);
+    Object.assign(o, { Nombre: nombre, Rol: rol, Activo: activo, Espacios: espacios });
+    h.getRange(u._fila, 1, 1, enc.length).setValues([enc.map(c => o[c] == null ? '' : o[c])]);
   } else {
-    h.appendRow([correo, nombre, rol, activo, new Date(), admin.Correo, '']);
+    const o = { Correo: correo, Nombre: nombre, Rol: rol, Activo: activo, Creado: new Date(), CreadoPor: admin.Correo, UltimoIngreso: '', Espacios: espacios };
+    h.appendRow(enc.map(c => o[c] == null ? '' : o[c]));
   }
   tocar();
   if (activo === 'NO') borrarFilas(hoja('Sesiones'), filas('Sesiones').filter(x => x.Correo === correo));
-  bitacora(admin.Correo, u ? 'usuario_editado' : 'usuario_agregado', correo + ' · ' + rol + ' · ' + activo);
+  bitacora(admin.Correo, u ? 'usuario_editado' : 'usuario_agregado', correo + ' · ' + rol + ' · ' + activo + (espacios ? ' · espacios: ' + espacios.replace(/\|/g, ', ') : ''));
   return listarUsuarios();
 }
 
@@ -282,9 +297,10 @@ function nombresUsuarios() {
 
 function invListar(u) {
   const todos = filas('Inventario').map(invPub);
-  const items = veTodo(u) ? todos : todos.filter(i => i.Responsable === u.Correo);
+  const mios = {}; espaciosAsignados(u).forEach(e => mios[e] = true);
+  const items = veTodo(u) ? todos : todos.filter(i => i.Responsable === u.Correo || (i.Situacion === 'Activo' && mios[i.Ubicacion]));
   const res = {
-    ok: true, version: 7, esAdmin: esAdminU(u), veTodo: veTodo(u), yo: u.Correo,
+    ok: true, version: 8, esAdmin: esAdminU(u), veTodo: veTodo(u), yo: u.Correo, misEspacios: espaciosAsignados(u),
     items: items, config: leerConfig(), nombres: nombresUsuarios(),
     catalogos: { estados: ESTADOS, modos: MODOS, causales: Object.keys(CAUSALES), requisitos: CAUSALES }
   };
@@ -627,6 +643,7 @@ function bitPub(r) {
 
 function bitEspaciosDe(u) {
   const m = {};
+  espaciosAsignados(u).forEach(e => m[e] = true);
   filas('Inventario').forEach(r => { if (norm(r.Responsable) === u.Correo && r.Situacion !== 'Baja' && r.Ubicacion) m[String(r.Ubicacion).trim()] = true; });
   return m;
 }
@@ -635,6 +652,7 @@ function bitListar(u) {
   let lista = filas('BitacoraEspacios').map(bitPub);
   if (!veTodo(u)) { const esp = bitEspaciosDe(u); lista = lista.filter(e => e.ReportadoPor === u.Correo || esp[e.Espacio]); }
   return { ok: true, esAdmin: esAdminU(u), yo: u.Correo, eventos: lista, nombres: nombresUsuarios(),
+    misEspacios: veTodo(u) ? catalogoEspacios() : Object.keys(bitEspaciosDe(u)).sort((a, b) => a.localeCompare(b, 'es', { numeric: true })), libre: veTodo(u) || !espaciosAsignados(u).length,
     catalogos: { tipos: EV_TIPOS, prioridades: EV_PRIORIDADES, estados: EV_ESTADOS } };
 }
 
@@ -645,6 +663,7 @@ function bitCrear(u, d) {
   if (EV_PRIORIDADES.indexOf(d.Prioridad) < 0) return { ok: false, error: 'Seleccione la prioridad.' };
   if (desc.length < 10) return { ok: false, error: 'Describa la eventualidad (mínimo 10 caracteres).' };
   if (!fechaOk(d.Fecha)) return { ok: false, error: 'Indique la fecha.' };
+  if (!veTodo(u) && espaciosAsignados(u).length && !bitEspaciosDe(u)[espacio]) return { ok: false, error: 'Solo puede anotar eventualidades en los espacios que tiene asignados.' };
   const placas = String(d.Placas || '').split(/[\s,;]+/).map(p => p.trim()).filter(p => /^\d{4}-\d{1,6}$/.test(p));
   const anio = String(d.Fecha).slice(0, 4), base = 'EV-' + anio + '-';
   let max = 0; filas('BitacoraEspacios').forEach(r => { const c = String(r.Id); if (c.indexOf(base) === 0) max = Math.max(max, Number(c.slice(base.length)) || 0); });
@@ -768,7 +787,7 @@ function buscarUsuario(correo) {
 
 function publico(u) {
   return {
-    correo: norm(u.Correo), nombre: u.Nombre, rol: u.Rol, activo: u.Activo,
+    correo: norm(u.Correo), nombre: u.Nombre, rol: u.Rol, activo: u.Activo, espacios: espaciosAsignados(u),
     ultimoIngreso: u.UltimoIngreso ? Utilities.formatDate(new Date(u.UltimoIngreso), 'America/Costa_Rica', 'dd/MM/yyyy HH:mm') : ''
   };
 }

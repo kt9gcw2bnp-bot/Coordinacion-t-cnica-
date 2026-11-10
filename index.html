@@ -164,6 +164,13 @@ textarea{resize:vertical;min-height:90px;line-height:1.45}
 .ev-cab{display:flex;gap:8px;align-items:center;margin-bottom:12px}.ev-datos{margin-bottom:12px}
 .ev-desc{font-size:14.5px;line-height:1.55;background:#F7F9FC;border:1px solid var(--borde);border-radius:6px;padding:12px 14px;white-space:pre-wrap}
 button.chip{cursor:pointer;font-family:inherit}
+.espacios-box{margin-top:16px;border:1px solid var(--borde);border-radius:6px;padding:14px;background:#FAFBFD}
+.chip-chk{display:inline-flex;align-items:center;gap:6px;font-size:13px;padding:6px 12px;border:1px solid var(--borde);border-radius:16px;background:#fff;cursor:pointer;margin:0;font-weight:500}
+.chip-chk input{width:auto}.chip-chk.on{background:#EEF3FB;border-color:var(--navy2);color:var(--navy)}
+.nuevo-esp{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:12px}.nuevo-esp input{flex:1 1 220px;width:auto}
+.usr-acciones{display:flex;gap:10px;margin-top:16px}.tag.esp{background:#EEF3FB;color:var(--navy);display:inline-block;margin:1px 0}
+#formUsr .form-fila{grid-template-columns:2fr 2fr 1.4fr 1fr}
+@media (max-width:820px){#formUsr .form-fila{grid-template-columns:1fr}}
 .sincro{font-size:12px;font-weight:400;color:var(--suave);margin-left:8px}
 .barra-sel.vacia{background:#EEF3FB;color:var(--navy);border:1px dashed #9DB2D3;font-size:13px}.barra-sel.vacia b{margin:0}
 .zona-archivo{display:flex;flex-direction:column;align-items:center;gap:4px;border:2px dashed #9DB2D3;border-radius:8px;padding:22px;margin:14px 0;background:#F7F9FC;cursor:pointer;text-align:center}
@@ -471,54 +478,86 @@ function vistaInicio(c){
 }
 
 async function vistaUsuarios(c){
-  c.innerHTML = `<div class="encabezado"><h2>Usuarios autorizados</h2><p>Solo los correos de esta lista pueden ingresar a la plataforma.</p></div>
-    <div class="panel"><h3>Autorizar o editar acceso</h3>
-      <form id="formUsr" class="form-fila" novalidate>
-        <div><label for="uCorreo">Correo @mep.go.cr</label><input id="uCorreo" placeholder="nombre.apellido@mep.go.cr"></div>
-        <div><label for="uNombreIn">Nombre completo</label><input id="uNombreIn"></div>
-        <div><label for="uRolIn">Rol</label><select id="uRolIn"></select></div>
-        <div><label for="uActivo">Acceso</label><select id="uActivo"><option value="SI">Activo</option><option value="NO">Inactivo</option></select></div>
-        <button class="btn" type="submit" id="btnGuardarUsr">Guardar</button>
+  c.innerHTML = `<div class="encabezado"><h2>Usuarios autorizados</h2><p>Solo los correos de esta lista pueden ingresar a la plataforma. Asigne a cada persona los espacios físicos a su cargo.</p></div>
+    <div class="panel"><h3 id="tituloUsr">Autorizar acceso</h3>
+      <form id="formUsr" novalidate>
+        <div class="form-fila">
+          <div><label for="uCorreo">Correo @mep.go.cr</label><input id="uCorreo" placeholder="nombre.apellido@mep.go.cr"></div>
+          <div><label for="uNombreIn">Nombre completo</label><input id="uNombreIn"></div>
+          <div><label for="uRolIn">Rol</label><select id="uRolIn"></select></div>
+          <div><label for="uActivo">Acceso</label><select id="uActivo"><option value="SI">Activo</option><option value="NO">Inactivo</option></select></div>
+        </div>
+        <div class="espacios-box">
+          <label>Espacios asignados <span class="tenue" id="cntEsp"></span></label>
+          <p class="nota" style="margin:0 0 10px">La persona verá y podrá anotar en la bitácora de estos espacios, y consultar los bienes que hay en ellos (los bienes a su nombre los ve siempre).</p>
+          <div class="chips" id="uEspacios"><span class="tenue">Cargando espacios…</span></div>
+          <div class="nuevo-esp"><input id="uEspNuevo" placeholder="Agregar otro espacio (ej. Laboratorio 2)"><button type="button" class="btn btn-auto btn-sec" id="btnEspNuevo">Agregar</button>
+            <button type="button" class="enlace" id="btnEspTodos">Marcar todos</button><button type="button" class="enlace" id="btnEspNinguno">Ninguno</button></div>
+        </div>
+        <div class="usr-acciones"><button class="btn btn-auto" type="submit" id="btnGuardarUsr">Guardar</button><button class="btn btn-auto btn-sec oculto" type="button" id="btnCancelarUsr">Cancelar edición</button></div>
       </form>
       <div id="msgUsr" class="msg oculto"></div>
     </div>
     <div class="panel"><h3>Lista de usuarios</h3><div class="tabla-wrap" id="tablaUsr">Cargando…</div></div>`;
   $('formUsr').addEventListener('submit', guardarUsr);
+  $('btnEspNuevo').onclick = ()=>{ const v=$('uEspNuevo').value.trim(); if(!v) return; if(!USR.espacios.includes(v)) USR.espacios.push(v); USR.sel.add(v); $('uEspNuevo').value=''; pintarEspaciosUsr(); };
+  $('uEspNuevo').addEventListener('keydown', e=>{ if(e.key==='Enter'){ e.preventDefault(); $('btnEspNuevo').click(); } });
+  $('btnEspTodos').onclick = ()=>{ USR.espacios.forEach(x=>USR.sel.add(x)); pintarEspaciosUsr(); };
+  $('btnEspNinguno').onclick = ()=>{ USR.sel.clear(); pintarEspaciosUsr(); };
+  $('btnCancelarUsr').onclick = limpiarFormUsr;
   try{
     const r = await api('listarUsuarios');
     if(r.ok) pintarUsuarios(r); else $('tablaUsr').textContent = r.error;
   }catch(e){ $('tablaUsr').textContent='No se pudo cargar la lista.'; }
 }
 
+const USR = {espacios:[], sel:new Set(), lista:[]};
+function pintarEspaciosUsr(){
+  USR.espacios.sort((a,b)=>a.localeCompare(b,'es',{numeric:true}));
+  $('uEspacios').innerHTML = USR.espacios.length ? USR.espacios.map(e=>`<label class="chip-chk ${USR.sel.has(e)?'on':''}"><input type="checkbox" value="${esc(e)}" ${USR.sel.has(e)?'checked':''}> ${esc(e)}</label>`).join('')
+    : '<span class="tenue">Aún no hay espacios registrados. Agréguelos abajo o registre bienes con su ubicación.</span>';
+  $('uEspacios').querySelectorAll('input').forEach(ch=>ch.onchange=()=>{ ch.checked?USR.sel.add(ch.value):USR.sel.delete(ch.value); ch.parentElement.classList.toggle('on',ch.checked); $('cntEsp').textContent=USR.sel.size?`(${USR.sel.size} seleccionado${USR.sel.size===1?'':'s'})`:''; });
+  $('cntEsp').textContent = USR.sel.size?`(${USR.sel.size} seleccionado${USR.sel.size===1?'':'s'})`:'';
+}
+function limpiarFormUsr(){
+  $('formUsr').reset(); $('uRolIn').value='Docente técnico'; $('uCorreo').disabled=false;
+  USR.sel.clear(); pintarEspaciosUsr(); $('tituloUsr').textContent='Autorizar acceso'; $('btnCancelarUsr').classList.add('oculto');
+}
+
 let rolesCache=[];
 function pintarUsuarios(r){
-  rolesCache = r.roles;
+  rolesCache = r.roles; USR.lista = r.usuarios;
+  USR.espacios = [...new Set([...(r.espacios||[]), ...USR.espacios])];
   $('uRolIn').innerHTML = r.roles.map(x=>`<option>${esc(x)}</option>`).join('');
   $('uRolIn').value = 'Docente técnico';
-  $('tablaUsr').innerHTML = `<table><thead><tr><th>Nombre</th><th>Correo</th><th>Rol</th><th>Acceso</th><th>Último ingreso</th><th></th></tr></thead><tbody>
+  pintarEspaciosUsr();
+  $('tablaUsr').innerHTML = `<table><thead><tr><th>Nombre</th><th>Correo</th><th>Rol</th><th>Espacios asignados</th><th>Acceso</th><th>Último ingreso</th><th></th></tr></thead><tbody>
     ${r.usuarios.map((u,i)=>`<tr><td>${esc(u.nombre)}</td><td>${esc(u.correo)}</td><td>${esc(u.rol)}</td>
+      <td>${(u.espacios||[]).length?u.espacios.map(e=>`<span class="tag esp">${esc(e)}</span>`).join(' '):(['Administrador','Dirección','Junta Administrativa','Contabilidad'].includes(u.rol)?'<span class="tenue">Todos (por su rol)</span>':'<span class="tenue">—</span>')}</td>
       <td><span class="tag ${u.activo==='SI'?'si':'no'}">${u.activo==='SI'?'Activo':'Inactivo'}</span></td>
       <td>${esc(u.ultimoIngreso||'—')}</td><td><button class="btn-mini" data-i="${i}">Editar</button></td></tr>`).join('')}
     </tbody></table>`;
   $('tablaUsr').querySelectorAll('.btn-mini').forEach(b=>b.onclick=()=>{
     const u=r.usuarios[b.dataset.i];
-    $('uCorreo').value=u.correo; $('uNombreIn').value=u.nombre; $('uRolIn').value=u.rol; $('uActivo').value=u.activo;
-    $('uNombreIn').focus();
+    $('uCorreo').value=u.correo; $('uCorreo').disabled=true; $('uNombreIn').value=u.nombre; $('uRolIn').value=u.rol; $('uActivo').value=u.activo;
+    USR.sel = new Set(u.espacios||[]); (u.espacios||[]).forEach(e=>{ if(!USR.espacios.includes(e)) USR.espacios.push(e); });
+    pintarEspaciosUsr(); $('tituloUsr').textContent='Editar acceso · '+u.nombre; $('btnCancelarUsr').classList.remove('oculto');
+    $('formUsr').scrollIntoView({behavior:'smooth', block:'start'});
   });
 }
 
 async function guardarUsr(e){
   e.preventDefault();
   const m=$('msgUsr'); const b=$('btnGuardarUsr');
-  const datos={correo:$('uCorreo').value.trim().toLowerCase(), nombre:$('uNombreIn').value.trim(), rol:$('uRolIn').value, activo:$('uActivo').value};
+  const datos={correo:$('uCorreo').value.trim().toLowerCase(), nombre:$('uNombreIn').value.trim(), rol:$('uRolIn').value, activo:$('uActivo').value, espacios:[...USR.sel]};
   if(!/^[a-z0-9._%+-]+@mep\.go\.cr$/.test(datos.correo)){ m.textContent='El correo debe ser @mep.go.cr.'; m.className='msg err'; return; }
   if(!datos.nombre){ m.textContent='Indique el nombre completo.'; m.className='msg err'; return; }
   cargando(b,true);
   try{
     const r = await api('guardarUsuario',{datos});
     if(!r.ok){ m.textContent=r.error; m.className='msg err'; return; }
-    m.textContent='Guardado: '+datos.correo; m.className='msg ok';
-    $('formUsr').reset(); pintarUsuarios(r);
+    m.textContent='Guardado: '+datos.nombre+(datos.espacios.length?' · '+datos.espacios.length+' espacio'+(datos.espacios.length===1?'':'s'):''); m.className='msg ok';
+    limpiarFormUsr(); pintarUsuarios(r);
   }catch(err){ m.textContent='No se pudo guardar.'; m.className='msg err'; }
   finally{ cargando(b,false,'Guardar'); }
 }
@@ -559,7 +598,7 @@ function nombreDe(c){ return c ? (INV.nombres[c] || c) : 'Sin asignar'; }
 /* Carga del inventario: una sola solicitud a la vez, copia en la sesión del navegador para mostrarlo al instante */
 let _cargaInv = null;
 function aplicarInv(r){
-  Object.assign(INV, {version:r.version||0, items:r.items, cat:r.catalogos, esAdmin:r.esAdmin, veTodo:r.veTodo, yo:r.yo, config:r.config||{}, nombres:r.nombres||{}, usuarios:r.usuarios||[]});
+  Object.assign(INV, {version:r.version||0, misEspacios:r.misEspacios||[], items:r.items, cat:r.catalogos, esAdmin:r.esAdmin, veTodo:r.veTodo, yo:r.yo, config:r.config||{}, nombres:r.nombres||{}, usuarios:r.usuarios||[]});
   const placas = new Set(r.items.map(i=>i.Placa));
   INV.sel = new Set([...INV.sel].filter(p=>placas.has(p)));
   INV.cargadoEn = Date.now();
@@ -631,7 +670,7 @@ function pintarInventario(){
     <button class="btn btn-auto btn-sec" id="btnExportar">Exportar a Excel</button>`;
   const resps = [...new Set(INV.items.map(i=>i.Responsable).filter(Boolean))].map(c=>[c,nombreDe(c)]).sort((a,b)=>a[1].localeCompare(b[1]));
   $('invCuerpo').innerHTML = `
-    ${INV.version<7?'<div class="msg err" style="margin:0 0 16px">El servidor (Apps Script) tiene una versión anterior del código: los traslados, las bajas y la importación no van a funcionar. Pegue el código nuevo y publique una <b>Nueva versión</b> en Implementar → Gestionar implementaciones.</div>':''}
+    ${INV.version<8?'<div class="msg err" style="margin:0 0 16px">El servidor (Apps Script) tiene una versión anterior del código: los traslados, las bajas y la importación no van a funcionar. Pegue el código nuevo y publique una <b>Nueva versión</b> en Implementar → Gestionar implementaciones.</div>':''}
     <div class="kpis">${kpisHtml(act,'Bienes activos')}<div class="kpi baja"><span>Dados de baja</span><b>${INV.items.length-act.length}</b></div></div>
     <div class="panel">
       <div class="barra">
@@ -1003,13 +1042,20 @@ async function vistaMisBienes(c){
 
 function pintarMisBienes(){
   const mios = INV.items.filter(i=>i.Responsable===INV.yo && i.Situacion==='Activo').sort((a,b)=>a.Placa.localeCompare(b.Placa,'es',{numeric:true}));
+  const esp = new Set(INV.misEspacios||[]);
+  const enEsp = INV.items.filter(i=>i.Responsable!==INV.yo && i.Situacion==='Activo' && esp.has(i.Ubicacion)).sort((a,b)=>(a.Ubicacion+a.Placa).localeCompare(b.Ubicacion+b.Placa,'es',{numeric:true}));
   $('btnMiPdf').disabled = !mios.length;
   $('btnMiPdf').onclick = ()=>docInventarioResponsable(INV.yo, mios);
   $('misCuerpo').innerHTML = `<div class="kpis kpis4">${kpisHtml(mios,'Bienes a mi cargo')}</div>
     <div class="panel">${mios.length?`<p class="nota" style="margin-bottom:12px">Toque un bien para ver su ficha, su historial o reportar una novedad.</p>
       <div class="tabla-wrap"><table class="tinv"><thead><tr><th>Placa</th><th>Descripción del bien</th><th>Marca / Modelo</th><th>Serie</th><th>Estado</th><th>Ubicación</th></tr></thead><tbody>
       ${mios.map(i=>`<tr data-p="${esc(i.Placa)}"><td class="placa">${esc(i.Placa)}</td><td>${esc(i.Descripcion)}</td><td>${esc([i.Marca,i.Modelo].filter(x=>x&&!/^no.?indica$/i.test(x)).join(' · ')||'—')}</td><td>${esc(i.Serie)}</td><td>${badgeEstado(i.Estado)}</td><td>${esc(i.Ubicacion)}</td></tr>`).join('')}
-      </tbody></table></div>`:'<p class="vacio">No tiene bienes asignados a su nombre. Si cree que es un error, comuníquese con la Coordinación Técnica.</p>'}</div>`;
+      </tbody></table></div>`:'<p class="vacio">No tiene bienes asignados a su nombre. Si cree que es un error, comuníquese con la Coordinación Técnica.</p>'}</div>
+    ${esp.size?`<div class="panel"><h3>Bienes en mis espacios <span class="tenue" style="font-weight:400">· ${[...esp].map(esc).join(', ')}</span></h3>
+      <p class="nota" style="margin-bottom:12px">Bienes ubicados en los espacios que tiene asignados, a cargo de otras personas o sin asignar. Solo consulta.</p>
+      ${enEsp.length?`<div class="tabla-wrap"><table class="tinv"><thead><tr><th>Placa</th><th>Descripción del bien</th><th>Estado</th><th>Ubicación</th><th>Responsable</th></tr></thead><tbody>
+      ${enEsp.map(i=>`<tr data-p="${esc(i.Placa)}"><td class="placa">${esc(i.Placa)}</td><td>${esc(i.Descripcion)}</td><td>${badgeEstado(i.Estado)}</td><td>${esc(i.Ubicacion)}</td><td class="${i.Responsable?'':'tenue'}">${esc(nombreDe(i.Responsable))}</td></tr>`).join('')}
+      </tbody></table></div>`:'<p class="vacio">No hay otros bienes registrados en sus espacios.</p>'}</div>`:''}`;
   $('misCuerpo').querySelectorAll('tbody tr').forEach(tr=>tr.onclick=()=>abrirBien(INV.items.find(i=>i.Placa===tr.dataset.p), true));
 }
 
@@ -1163,7 +1209,7 @@ function cargarBit(){
   _cargaBit = api('bitListar').then(r=>{
     _cargaBit = null;
     if(!r.ok) throw new Error(r.error);
-    Object.assign(BIT, {eventos:r.eventos, cat:r.catalogos, esAdmin:r.esAdmin, yo:r.yo, cargado:true});
+    Object.assign(BIT, {eventos:r.eventos, cat:r.catalogos, esAdmin:r.esAdmin, yo:r.yo, misEspacios:r.misEspacios||[], libre:r.libre!==false, cargado:true});
     Object.assign(INV.nombres, r.nombres||{});
     actualizarContadorBit();
     return r;
@@ -1259,12 +1305,13 @@ async function formEventualidad(pref){
     <div class="grid-form">
       <div><label>Fecha</label><input type="date" id="evFecha" value="${hoyISO()}"></div>
       <div><label>Hora</label><input type="time" id="evHora" value="${hora}"></div>
-      <div><label>Espacio</label><input id="evEsp" list="dlEsp2" value="${esc(pref.Espacio||'')}" placeholder="Ej. Aula 18, Laboratorio 2"></div>
+      <div><label>Espacio</label>${BIT.libre?`<input id="evEsp" list="dlEsp2" value="${esc(pref.Espacio||'')}" placeholder="Ej. Aula 18, Laboratorio 2">`
+        :`<select id="evEsp">${opciones(BIT.misEspacios, BIT.misEspacios.includes(pref.Espacio)?pref.Espacio:(BIT.misEspacios.length===1?BIT.misEspacios[0]:''), BIT.misEspacios.length===1?null:'Seleccione…')}</select>`}</div>
       <div class="ancho2"><label>Tipo</label><select id="evTipo">${opciones(BIT.cat.tipos,'','Seleccione…')}</select></div>
       <div><label>Prioridad</label><div class="radios">${BIT.cat.prioridades.map(p=>`<label class="radio ${p==='Alta'?'malo':p==='Media'?'regular':'bueno'}"><input type="radio" name="evPrio" value="${p}" ${p==='Media'?'checked':''}> ${p}</label>`).join('')}</div></div>
       <div class="ancho3"><label>¿Qué ocurrió?</label><textarea id="evDesc" rows="4" placeholder="Describa lo que encontró, desde cuándo y si afecta las lecciones"></textarea></div>
       <div class="ancho3"><label>Bienes afectados (placas, opcional)</label><input id="evPlacas" value="${esc(pref.Placas||'')}" placeholder="Ej. 6526-0473, 6526-0474"></div>
-      <datalist id="dlEsp2">${espaciosConocidos().map(x=>`<option value="${esc(x)}">`).join('')}</datalist>
+      <datalist id="dlEsp2">${[...new Set([...espaciosConocidos(), ...(BIT.misEspacios||[])])].map(x=>`<option value="${esc(x)}">`).join('')}</datalist>
     </div>
     <p class="nota">Las anotaciones de prioridad <b>Alta</b> se avisan por correo a la Coordinación Técnica.</p>`,
     '<button class="btn btn-auto" id="btnEvOk">Guardar anotación</button>', 760);
