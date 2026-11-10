@@ -81,6 +81,7 @@ function doPost(e) {
       case 'invTraslado':     return json(conSesion(body, u => invTraslado(u, body.datos || {}), true));
       case 'invBaja':         return json(conSesion(body, u => invBaja(u, body.datos || {}), true));
       case 'invAnularBaja':   return json(conSesion(body, u => invAnularBaja(u, body.datos || {}), true));
+      case 'invImportar':     return json(conSesion(body, u => invImportar(u, body.datos || {}), true));
       case 'cfgGuardar':      return json(conSesion(body, u => cfgGuardar(u, body.datos || {}), true));
       default:                return json({ ok: false, error: 'Acción no reconocida.' });
     }
@@ -259,7 +260,7 @@ function invListar(u) {
   const todos = filas('Inventario').map(invPub);
   const items = veTodo(u) ? todos : todos.filter(i => i.Responsable === u.Correo);
   const res = {
-    ok: true, esAdmin: esAdminU(u), veTodo: veTodo(u), yo: u.Correo,
+    ok: true, version: 4, esAdmin: esAdminU(u), veTodo: veTodo(u), yo: u.Correo,
     items: items, config: leerConfig(), nombres: nombresUsuarios(),
     catalogos: { estados: ESTADOS, modos: MODOS, causales: Object.keys(CAUSALES), requisitos: CAUSALES }
   };
@@ -443,6 +444,55 @@ function cfgGuardar(u, d) {
   });
   bitacora(u.Correo, 'config', 'Datos institucionales');
   return { ok: true, config: leerConfig() };
+}
+
+/* Importación desde Excel (solo Administrador). No duplica placas ni reactiva placas dadas de baja. */
+function invImportar(u, d) {
+  const entrada = d.Filas || [];
+  const op = d.Opciones || {};
+  const tipo = d.Tipo === 'Baja' ? 'Baja' : 'Activo';
+  if (!entrada.length) return { ok: false, error: 'El archivo no tiene filas para importar.' };
+  if (entrada.length > 400) return { ok: false, error: 'Envíe como máximo 400 filas por lote.' };
+  const resp = norm(op.Responsable);
+  if (tipo === 'Activo' && resp && !usuarioActivo(resp)) return { ok: false, error: 'El responsable debe ser un usuario activo.' };
+  if (tipo === 'Baja' && (!fechaOk(op.FechaBaja) || !CAUSALES[op.Causal])) return { ok: false, error: 'Para bajas históricas indique la fecha y la causal.' };
+  const h = hoja('Inventario'), enc = encabezado(h);
+  const existe = {};
+  filas('Inventario').forEach(r => existe[String(r.Placa).trim()] = true);
+  const fechaIng = fechaOk(op.FechaIngreso) ? op.FechaIngreso : hoyCR();
+  const cons = d.Consecutivo && /^IM-\d{4}-\d{4}$/.test(d.Consecutivo) ? d.Consecutivo : siguienteConsecutivo('IM', hoyCR());
+  const ahora = ahoraCR(), nuevas = [], movs = [], omitidas = [], errores = [];
+  entrada.forEach(f => {
+    const placa = txt(f.Placa, 20).replace(/\s+/g, '');
+    if (!/^\d{4}-\d{1,6}$/.test(placa)) { errores.push((placa || '(sin placa)') + ': placa inválida'); return; }
+    if (!txt(f.Descripcion)) { errores.push(placa + ': sin descripción'); return; }
+    if (existe[placa]) { omitidas.push(placa); return; }
+    existe[placa] = true;
+    const o = {
+      Placa: placa, Descripcion: txt(f.Descripcion), Marca: txt(f.Marca), Modelo: txt(f.Modelo), Serie: txt(f.Serie),
+      Estado: ESTADOS.indexOf(f.Estado) >= 0 ? f.Estado : '', Ubicacion: txt(f.Ubicacion) || txt(op.Ubicacion),
+      UbicacionReal: txt(f.UbicacionReal), Especialidad: txt(f.Especialidad) || txt(op.Especialidad),
+      ModoAdquisicion: txt(f.ModoAdquisicion) || txt(op.ModoAdquisicion), TFA: txt(f.TFA, 30), Observaciones: txt(f.Observaciones, 500),
+      Situacion: tipo, FechaIngreso: fechaIng, Responsable: tipo === 'Activo' ? resp : '',
+      FechaBaja: tipo === 'Baja' ? op.FechaBaja : '', MotivoBaja: tipo === 'Baja' ? op.Causal : '',
+      ActaBaja: tipo === 'Baja' ? (txt(f.Acta, 30) || txt(op.Acta, 30)) : '', ConsecutivoBaja: '',
+      Actualizado: ahora, ActualizadoPor: u.Correo
+    };
+    nuevas.push(enc.map(c => String(o[c] == null ? '' : o[c])));
+    movs.push({ Consecutivo: cons, Fecha: tipo === 'Baja' ? op.FechaBaja : fechaIng, Tipo: tipo === 'Baja' ? 'Baja histórica (importación)' : 'Alta por importación',
+      Placa: placa, Descripcion: o.Descripcion, Estado: o.Estado, AUbicacion: o.Ubicacion, AResponsable: o.Responsable,
+      Causal: tipo === 'Baja' ? op.Causal : o.ModoAdquisicion, Detalle: 'Archivo: ' + txt(d.Archivo, 120) + (o.ActaBaja ? ' · acta ' + o.ActaBaja : '') });
+  });
+  if (nuevas.length) {
+    capacidad(h, nuevas.length);
+    h.getRange(h.getLastRow() + 1, 1, nuevas.length, enc.length).setValues(nuevas);
+    const hm = hoja('Movimientos'), em = encabezado(hm);
+    capacidad(hm, movs.length);
+    hm.getRange(hm.getLastRow() + 1, 1, movs.length, em.length)
+      .setValues(movs.map(m => em.map(c => c === 'RegistradoPor' ? u.Correo : c === 'Registrado' ? ahora : String(m[c] == null ? '' : m[c]))));
+  }
+  bitacora(u.Correo, 'inv_importacion', cons + ' · ' + nuevas.length + ' nuevos · ' + omitidas.length + ' existentes · ' + errores.length + ' con error');
+  return { ok: true, consecutivo: cons, importados: nuevas.length, omitidas: omitidas, errores: errores };
 }
 
 /** Ejecutar UNA vez desde el editor: carga el inventario actual (activos y bajas). No duplica placas. */

@@ -153,6 +153,17 @@ input:disabled,select:disabled{background:#F4F6F9;color:var(--texto)}
 .linea .lt{display:inline-block;min-width:84px;color:var(--suave)}.linea .ld{color:var(--texto);margin-top:2px;padding-left:84px}.linea .ld.tenue{color:#8A94A6;font-size:12px}
 .tabla-wrap.mini{max-height:220px;overflow:auto;border:1px solid var(--borde);border-radius:4px}.tabla-wrap.mini table{font-size:12.5px}
 .modal-pie{flex-wrap:wrap}
+
+.barra-sel.vacia{background:#EEF3FB;color:var(--navy);border:1px dashed #9DB2D3;font-size:13px}.barra-sel.vacia b{margin:0}
+.zona-archivo{display:flex;flex-direction:column;align-items:center;gap:4px;border:2px dashed #9DB2D3;border-radius:8px;padding:22px;margin:14px 0;background:#F7F9FC;cursor:pointer;text-align:center}
+.zona-archivo input{position:absolute;opacity:0;width:1px;height:1px}.zona-archivo span{font-size:15px;font-weight:600;color:var(--navy)}.zona-archivo small{color:var(--suave)}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin:10px 0}.chip{font-size:12px;padding:4px 10px;border-radius:12px;border:1px solid var(--borde)}
+.chip.ok{background:#E8F4EE;color:#1E7B4F;border-color:#BFE0CD}.chip.no{background:#FFF6DB;color:#7A5C00}
+.imp-resumen{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:14px 0}
+.imp-resumen div{border:1px solid var(--borde);border-radius:6px;padding:10px;text-align:center}.imp-resumen b{display:block;font-size:22px;color:var(--navy)}
+.imp-resumen span{font-size:12px;color:var(--suave)}.imp-resumen .mal b{color:#B42318}
+td.placa{white-space:nowrap;font-family:Consolas,Menlo,monospace;font-weight:600;color:var(--navy)}
+.sub-imp{font-size:14px;color:var(--navy);margin:16px 0 8px}.prev{max-height:320px}.imp-existe td,.imp-dup td{color:#8A94A6}.imp-error td{background:#FFF5F4}
 /* ---------- Documentos ---------- */
 #docView{position:fixed;inset:0;background:#5B6B80;z-index:80;display:flex;flex-direction:column}
 .doc-barra{display:flex;gap:10px;align-items:center;background:var(--navy);color:#fff;padding:10px 16px;border-bottom:3px solid var(--oro)}
@@ -528,7 +539,7 @@ function nombreDe(c){ return c ? (INV.nombres[c] || c) : 'Sin asignar'; }
 async function cargarInv(){
   const r = await api('invListar');
   if(!r.ok) throw new Error(r.error);
-  Object.assign(INV, {items:r.items, cat:r.catalogos, esAdmin:r.esAdmin, veTodo:r.veTodo, yo:r.yo, config:r.config||{}, nombres:r.nombres||{}, usuarios:r.usuarios||[]});
+  Object.assign(INV, {version:r.version||0, items:r.items, cat:r.catalogos, esAdmin:r.esAdmin, veTodo:r.veTodo, yo:r.yo, config:r.config||{}, nombres:r.nombres||{}, usuarios:r.usuarios||[]});
   INV.sel = new Set();
 }
 
@@ -564,11 +575,12 @@ function kpisHtml(lista, titulo){
 function pintarInventario(){
   const act = INV.items.filter(i=>i.Situacion==='Activo');
   const f = INV.f;
-  $('encAcc').innerHTML = `${INV.esAdmin?'<button class="btn btn-auto btn-sec" id="btnCfg">Datos institucionales</button>':''}
+  $('encAcc').innerHTML = `${INV.esAdmin?'<button class="btn btn-auto btn-sec" id="btnImportar">⬆ Importar Excel</button><button class="btn btn-auto btn-sec" id="btnCfg">Datos institucionales</button>':''}
     <button class="btn btn-auto btn-sec" id="btnCertInv">Certificar inventario (PDF)</button>
     <button class="btn btn-auto btn-sec" id="btnExportar">Exportar a Excel</button>`;
   const resps = [...new Set(INV.items.map(i=>i.Responsable).filter(Boolean))].map(c=>[c,nombreDe(c)]).sort((a,b)=>a[1].localeCompare(b[1]));
   $('invCuerpo').innerHTML = `
+    ${INV.version<4?'<div class="msg err" style="margin:0 0 16px">El servidor (Apps Script) tiene una versión anterior del código: los traslados, las bajas y la importación no van a funcionar. Pegue el código nuevo y publique una <b>Nueva versión</b> en Implementar → Gestionar implementaciones.</div>':''}
     <div class="kpis">${kpisHtml(act,'Bienes activos')}<div class="kpi baja"><span>Dados de baja</span><b>${INV.items.length-act.length}</b></div></div>
     <div class="panel">
       <div class="barra">
@@ -592,6 +604,7 @@ function pintarInventario(){
   $('fSit').querySelectorAll('button').forEach(b=>b.onclick=()=>{ f.sit=b.dataset.s; INV.sel.clear(); pintarInventario(); });
   if($('btnNuevo')) $('btnNuevo').onclick = ()=>abrirBien(null);
   if($('btnCfg')) $('btnCfg').onclick = abrirConfig;
+  if($('btnImportar')) $('btnImportar').onclick = abrirImportar;
   $('btnExportar').onclick = exportarExcel;
   $('btnCertInv').onclick = ()=>docCertInventario(invFiltrados().filter(i=>i.Situacion==='Activo'));
   pintarTablaInv();
@@ -628,8 +641,11 @@ function pintarTablaInv(){
 function pintarBarraSel(){
   const b=$('barraSel'); if(!b) return;
   const n=INV.sel.size;
-  b.classList.toggle('oculto', !n);
-  if(!n) return;
+  const puede = INV.esAdmin && INV.f.sit==='Activo';
+  b.classList.toggle('oculto', !puede);
+  b.classList.toggle('vacia', !n);
+  if(!puede) return;
+  if(!n){ b.innerHTML='<span>☑ <b>Para trasladar, asignar o dar de baja:</b> marque la casilla de uno o varios bienes (o la de arriba para marcar todos los que ve). También puede tocar un bien y usar los botones de su ficha.</span>'; return; }
   b.innerHTML = `<b>${n} bien${n===1?'':'es'} seleccionado${n===1?'':'s'}</b>
     <button class="btn btn-auto" id="selTras">Trasladar / asignar</button>
     <button class="btn btn-auto btn-peligro" id="selBaja">Dar de baja</button>
@@ -1020,6 +1036,234 @@ function docCertInventario(lista){
     + firmas([['Coordinación Técnica', c.CoordinadorTecnico], ['Dirección del centro educativo', c.Director]])
     + `<p class="d-nota">Fundamento: ${FUNDAMENTO}</p>`;
   abrirDoc('Certificación de inventario', html);
+}
+
+/* =========================================================
+   IMPORTAR INVENTARIO DESDE EXCEL (.xlsx / .csv) — sin librerías externas
+   ========================================================= */
+async function leerXlsx(file){
+  const buf = new Uint8Array(await file.arrayBuffer());
+  const dv = new DataView(buf.buffer, buf.byteOffset, buf.byteLength);
+  let e = buf.length - 22;
+  while(e >= 0 && dv.getUint32(e, true) !== 0x06054b50) e--;
+  if(e < 0) throw new Error('El archivo no es un Excel (.xlsx) válido. Si es .xls antiguo, ábralo y guárdelo como .xlsx.');
+  const total = dv.getUint16(e + 10, true);
+  let p = dv.getUint32(e + 16, true);
+  const dec = new TextDecoder(), ent = {};
+  for(let i=0; i<total; i++){
+    const metodo = dv.getUint16(p + 10, true), comp = dv.getUint32(p + 20, true);
+    const nl = dv.getUint16(p + 28, true), xl = dv.getUint16(p + 30, true), cl = dv.getUint16(p + 32, true), off = dv.getUint32(p + 42, true);
+    ent[dec.decode(buf.subarray(p + 46, p + 46 + nl))] = {metodo, comp, off};
+    p += 46 + nl + xl + cl;
+  }
+  const leer = async nombre => {
+    const f = ent[nombre] || ent[nombre.replace(/^\//,'')]; if(!f) return null;
+    const ini = f.off + 30 + dv.getUint16(f.off + 26, true) + dv.getUint16(f.off + 28, true);
+    const datos = buf.subarray(ini, ini + f.comp);
+    if(f.metodo === 0) return dec.decode(datos);
+    if(f.metodo !== 8) throw new Error('Formato de compresión no soportado.');
+    if(typeof DecompressionStream === 'undefined') throw new Error('Este navegador no puede leer archivos Excel. Actualice el iPad o use Chrome.');
+    return await new Response(new Blob([datos]).stream().pipeThrough(new DecompressionStream('deflate-raw'))).text();
+  };
+  const xml = s => new DOMParser().parseFromString(s, 'application/xml');
+  const tags = (n, t) => Array.from(n.getElementsByTagName(t));
+  const compartidos = [];
+  const sst = await leer('xl/sharedStrings.xml');
+  if(sst) tags(xml(sst), 'si').forEach(si => compartidos.push(tags(si, 't').map(t => t.textContent).join('')));
+  const rels = {};
+  tags(xml(await leer('xl/_rels/workbook.xml.rels')), 'Relationship').forEach(r => rels[r.getAttribute('Id')] = r.getAttribute('Target'));
+  const hojas = [];
+  for(const s of tags(xml(await leer('xl/workbook.xml')), 'sheet')){
+    let t = rels[s.getAttribute('r:id')] || ''; t = t.startsWith('/') ? t.slice(1) : 'xl/' + t.replace(/^\.\//,'');
+    const cont = await leer(t); if(!cont) continue;
+    const m = [];
+    tags(xml(cont), 'c').forEach(c => {
+      const ref = c.getAttribute('r') || ''; const mm = ref.match(/^([A-Z]+)(\d+)$/); if(!mm) return;
+      let col = 0; for(const ch of mm[1]) col = col * 26 + ch.charCodeAt(0) - 64;
+      const fila = Number(mm[2]) - 1, tipo = c.getAttribute('t');
+      const v = c.getElementsByTagName('v')[0];
+      let val = '';
+      if(tipo === 's') val = compartidos[Number(v && v.textContent)] || '';
+      else if(tipo === 'inlineStr') val = tags(c, 't').map(t => t.textContent).join('');
+      else val = v ? v.textContent : '';
+      (m[fila] = m[fila] || [])[col - 1] = val;
+    });
+    hojas.push({nombre: s.getAttribute('name'), filas: Array.from(m, f => Array.from(f || [], x => x == null ? '' : String(x)))});
+  }
+  return hojas;
+}
+
+function leerCsv(texto){
+  const sep = (texto.split('\n')[0].match(/;/g)||[]).length >= (texto.split('\n')[0].match(/,/g)||[]).length ? ';' : ',';
+  const filas = []; let f = [], v = '', q = false;
+  for(let i=0;i<texto.length;i++){
+    const ch = texto[i];
+    if(q){ if(ch==='"'){ if(texto[i+1]==='"'){ v+='"'; i++; } else q=false; } else v+=ch; }
+    else if(ch==='"') q=true; else if(ch===sep){ f.push(v); v=''; } else if(ch==='\n'){ f.push(v.replace(/\r$/,'')); filas.push(f); f=[]; v=''; } else v+=ch;
+  }
+  if(v||f.length){ f.push(v); filas.push(f); }
+  return [{nombre:'CSV', filas}];
+}
+
+const limpiar = s => String(s==null?'':s).replace(/[   ]/g,' ').replace(/\s+/g,' ').trim();
+const normal = s => limpiar(s).toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/[-_.]/g,' ').replace(/\s+/g,' ').trim();
+const compacto = s => normal(s).replace(/\s/g,'');
+const MODO_NORMAL = {'ley 7372':'Ley 7372','donacion mep':'Donación MEP','donacion':'Donación','donancion':'Donación','fondos propios':'Fondos Propios','llave en mano diee':'Llave en mano DIEE'};
+function estadoNormal(v){ const x=normal(v); if(/^(excelente|bueno|b)$/.test(x)) return 'Bueno'; if(/^(regular|r)$/.test(x)) return 'Regular'; if(/^(malo|m)$/.test(x)) return 'Malo'; return ''; }
+
+/* Detecta el encabezado y las columnas del formato MEP */
+function detectarColumnas(m){
+  let fila = -1;
+  for(let r=0; r<Math.min(m.length, 20); r++){
+    const f = (m[r]||[]).map(compacto);
+    if(f.some(x=>/identificacion|^placa|deplaca/.test(x)) && f.some(x=>/descrip/.test(x))){ fila = r; break; }
+  }
+  if(fila < 0) return null;
+  const H = (m[fila]||[]).map(compacto), H2 = (m[fila+1]||[]).map(compacto);
+  const col = {}, set = (k,j)=>{ if(col[k]===undefined) col[k]=j; };
+  H.forEach((h,j)=>{
+    if(/identificacion|^placa|deplaca/.test(h)) set('Placa',j);
+    else if(/descrip/.test(h)) set('Descripcion',j);
+    else if(/^marca/.test(h)) set('Marca',j);
+    else if(/^modelo/.test(h)) set('Modelo',j);
+    else if(/^serie/.test(h)) set('Serie',j);
+    else if(/^estado/.test(h)) set('EstadoIni',j);
+    else if(/ubicacionreal/.test(h)) set('UbicacionReal',j);
+    else if(/^sa$|^ubicacion|^aula|^lugar/.test(h)) set('Ubicacion',j);
+    else if(/modo|adquisic/.test(h)) set('ModoAdquisicion',j);
+    else if(/observ/.test(h)) set('Observaciones',j);
+    else if(/^tfa$|tomo/.test(h)) set('TFA',j);
+    else if(/^acta/.test(h)) set('Acta',j);
+    else if(/especialidad/.test(h)) set('Especialidad',j);
+    else if(h==='t') set('T',j); else if(h==='f') set('F',j); else if(h==='a') set('A',j);
+  });
+  let inicio = fila + 1, estado = null;
+  if(col.EstadoIni !== undefined){
+    const j = col.EstadoIni;
+    const sub = [0,1,2,3].map(k=>H2[j+k]||'');
+    if(sub.some(x=>/bueno|regular|malo|excelente/.test(x))){
+      inicio = fila + 2; estado = {tipo:'marcas', cols:{}};
+      sub.forEach((x,k)=>{ const e=estadoNormal(x); if(e && estado.cols[e]===undefined) estado.cols[e]=j+k; });
+    } else {
+      const muestra = m.slice(fila+1, fila+40).map(f=>normal((f||[])[j]));
+      if(muestra.some(x=>/^(bueno|regular|malo|excelente)$/.test(x))) estado = {tipo:'texto', col:j};
+      else estado = {tipo:'marcas', cols:{Bueno:j, Regular:j+1, Malo:j+2}, supuesto:true};
+    }
+  }
+  return {fila, inicio, col, estado};
+}
+
+function extraerFilas(m, det){
+  const c = det.col, v = (f,k)=> c[k]===undefined ? '' : limpiar(f[c[k]]);
+  const salida = [];
+  for(let r=det.inicio; r<m.length; r++){
+    const f = m[r] || [];
+    const placa = v(f,'Placa').replace(/\s+/g,''), desc = v(f,'Descripcion');
+    if(!placa && !desc) continue;
+    if(!desc && !/^\d{3,5}-?\d{0,6}$/.test(placa)) continue;  // filas de texto (p. ej. redacción de bajas) o títulos intermedios
+    let estado = '';
+    if(det.estado){
+      if(det.estado.tipo==='texto') estado = estadoNormal(f[det.estado.col]);
+      else for(const e of ['Bueno','Regular','Malo']){ const j=det.estado.cols[e]; if(j!==undefined && limpiar(f[j])){ estado=e; break; } }
+    }
+    const modo = v(f,'ModoAdquisicion');
+    const tfa = v(f,'TFA') || (c.T!==undefined ? [v(f,'T'),v(f,'F'),v(f,'A')].filter(Boolean).join('/') : '');
+    salida.push({fila:r+1, Placa:placa, Descripcion:desc, Marca:v(f,'Marca'), Modelo:v(f,'Modelo'), Serie:v(f,'Serie'), Estado:estado,
+      Ubicacion:v(f,'Ubicacion').replace(/^Aula-\s*/i,'Aula '), UbicacionReal:v(f,'UbicacionReal'), ModoAdquisicion:MODO_NORMAL[normal(modo)]||modo,
+      Observaciones:v(f,'Observaciones'), TFA:tfa, Acta:v(f,'Acta'), Especialidad:v(f,'Especialidad')});
+  }
+  return salida;
+}
+
+function clasificar(filas){
+  const existe = new Set(INV.items.map(i=>i.Placa)), visto = new Set();
+  return filas.map(f=>{
+    let st='nuevo', msg='';
+    if(!/^\d{4}-\d{1,6}$/.test(f.Placa)){ st='error'; msg='Placa inválida'; }
+    else if(!f.Descripcion){ st='error'; msg='Sin descripción'; }
+    else if(visto.has(f.Placa)){ st='dup'; msg='Repetida en el archivo'; }
+    else if(existe.has(f.Placa)){ st='existe'; msg=(INV.items.find(i=>i.Placa===f.Placa)||{}).Situacion==='Baja'?'Ya existe (de baja)':'Ya existe'; }
+    visto.add(f.Placa);
+    return Object.assign(f,{st,msg});
+  });
+}
+
+function abrirImportar(){
+  const m = modal('modalImp','Importar inventario desde Excel', `
+    <p class="nota">Suba el inventario en el formato del MEP (.xlsx o .csv). La plataforma reconoce las columnas <b>Número de identificación, Descripción del bien, Marca, Modelo, Serie, Estado (X en Bueno / Regular / Malo), SA o Ubicación, Modo de adquisición, Observaciones y Ubicación real</b>. Antes de cargar verá una vista previa; las placas que ya existen no se duplican.</p>
+    <label class="zona-archivo" for="impArchivo"><input type="file" id="impArchivo" accept=".xlsx,.csv"><span>📄 Toque aquí para elegir el archivo</span><small id="impNombre">Excel (.xlsx) o CSV</small></label>
+    <div id="impPaso2"></div>`, '<button class="btn btn-auto" id="btnImp" disabled>Importar</button>', 980);
+  const st = {hojas:null, archivo:'', filas:[], det:null};
+  $('impArchivo').onchange = async e=>{
+    const f = e.target.files[0]; if(!f) return;
+    st.archivo = f.name; $('impNombre').textContent = f.name + ' · leyendo…';
+    try{
+      st.hojas = /\.csv$/i.test(f.name) ? leerCsv(await f.text()) : await leerXlsx(f);
+      const dets = st.hojas.map(h=>detectarColumnas(h.filas));
+      let k = dets.findIndex(d=>d && d.col.Acta===undefined); if(k<0) k = dets.findIndex(Boolean);
+      $('impNombre').textContent = f.name;
+      pintarPaso2(k<0?0:k);
+    }catch(err){ $('impNombre').textContent = f.name; m.msg(err.message||'No se pudo leer el archivo.','err'); }
+  };
+  function pintarPaso2(ix){
+    const h = st.hojas[ix], det = detectarColumnas(h.filas);
+    st.det = det;
+    if(!det){ $('impPaso2').innerHTML = hojaSel(ix)+'<div class="msg err">No se encontró el encabezado en esta hoja. Debe tener al menos las columnas "Número de identificación" (o "Placa") y "Descripción del bien".</div>'; enlazarHoja(); $('btnImp').disabled=true; return; }
+    st.filas = clasificar(extraerFilas(h.filas, det));
+    const n = k=>st.filas.filter(f=>f.st===k).length;
+    const pareceBajas = det.col.Acta!==undefined;
+    const etiquetas = {Placa:'Placa',Descripcion:'Descripción',Marca:'Marca',Modelo:'Modelo',Serie:'Serie',Ubicacion:'Ubicación / SA',UbicacionReal:'Ubicación real',ModoAdquisicion:'Modo de adquisición',Observaciones:'Observaciones',TFA:'T.F.A.',T:'T.F.A.',Acta:'Acta',Especialidad:'Especialidad'};
+    const chips = Object.keys(etiquetas).filter(k=>det.col[k]!==undefined && !(k==='T'&&det.col.TFA!==undefined)).map(k=>`<span class="chip ok">✓ ${etiquetas[k]}</span>`).join('')
+      + (det.estado?`<span class="chip ok">✓ Estado (${det.estado.tipo==='texto'?'texto':'X en '+Object.keys(det.estado.cols).join(' / ')})</span>`:'<span class="chip no">Sin columna de estado</span>');
+    $('impPaso2').innerHTML = `${hojaSel(ix)}
+      <div class="chips">${chips}</div>
+      ${det.estado&&det.estado.supuesto?'<p class="nota">Las columnas de estado no tienen título: se asume el orden <b>Bueno, Regular, Malo</b>.</p>':''}
+      <div class="imp-resumen"><div><b>${n('nuevo')}</b><span>nuevos</span></div><div><b>${n('existe')}</b><span>ya existen</span></div><div><b>${n('dup')}</b><span>repetidos</span></div><div class="${n('error')?'mal':''}"><b>${n('error')}</b><span>con error</span></div></div>
+      <div class="grid-form">
+        <div><label>Tipo de registro</label><select id="impTipo"><option value="Activo">Bienes activos</option><option value="Baja" ${pareceBajas?'selected':''}>Bajas históricas (ya anotadas en el Libro)</option></select></div>
+        <div><label>Especialidad (si no viene en el archivo)</label><input id="impEsp" list="dlEspI" value="${esc(INV.f.ubic?'':'Contabilidad')}"></div>
+        <div><label>Modo de adquisición (si viene vacío)</label><select id="impModo">${opciones(INV.cat.modos,'', 'Dejar vacío')}</select></div>
+        <div class="impAct"><label>Ubicación (si viene vacía)</label><input id="impUbic" list="dlUbicI"></div>
+        <div class="impAct"><label>Asignar a la persona responsable</label><select id="impResp">${opciones(INV.usuarios.map(x=>[x.correo,x.nombre+' · '+x.rol]),'','Sin asignar (asignar luego con traslado)')}</select></div>
+        <div class="impAct"><label>Fecha de ingreso</label><input type="date" id="impFecha" value="${hoyISO()}"></div>
+        <div class="impBaja"><label>Fecha de la baja</label><input type="date" id="impFBaja"></div>
+        <div class="impBaja"><label>Causal</label><select id="impCausal">${opciones(INV.cat.causales,'Inservibilidad (destrucción)')}</select></div>
+        <div class="impBaja"><label>Acta (si no viene en el archivo)</label><input id="impActa"></div>
+        <datalist id="dlUbicI">${unicos('Ubicacion').map(x=>`<option value="${esc(x)}">`).join('')}</datalist>
+        <datalist id="dlEspI">${unicos('Especialidad').map(x=>`<option value="${esc(x)}">`).join('')}</datalist>
+      </div>
+      <h4 class="sub-imp">Vista previa (${st.filas.length} filas)</h4>
+      <div class="tabla-wrap mini prev"><table><thead><tr><th>Fila</th><th>Resultado</th><th>Placa</th><th>Descripción</th><th>Marca</th><th>Modelo</th><th>Serie</th><th>Estado</th><th>Ubicación</th><th>Modo</th></tr></thead><tbody>
+        ${st.filas.slice(0,300).map(f=>`<tr class="imp-${f.st}"><td>${f.fila}</td><td>${f.st==='nuevo'?'<span class="est bueno">Nuevo</span>':`<span class="est ${f.st==='error'?'malo':'sin'}">${esc(f.msg)}</span>`}</td><td class="placa">${esc(f.Placa)}</td><td>${esc(f.Descripcion)}</td><td>${esc(f.Marca)}</td><td>${esc(f.Modelo)}</td><td>${esc(f.Serie)}</td><td>${esc(f.Estado||'—')}</td><td>${esc(f.Ubicacion)}</td><td>${esc(f.ModoAdquisicion)}</td></tr>`).join('')}
+      </tbody></table></div>${st.filas.length>300?`<p class="nota">Se muestran las primeras 300 filas.</p>`:''}`;
+    enlazarHoja();
+    const tipoUI = ()=>{ const b=$('impTipo').value==='Baja'; m.querySelectorAll('.impAct').forEach(x=>x.classList.toggle('oculto',b)); m.querySelectorAll('.impBaja').forEach(x=>x.classList.toggle('oculto',!b)); };
+    $('impTipo').onchange = tipoUI; tipoUI();
+    $('btnImp').disabled = !n('nuevo');
+    $('btnImp').textContent = n('nuevo') ? `Importar ${n('nuevo')} bien${n('nuevo')===1?'':'es'} nuevo${n('nuevo')===1?'':'s'}` : 'No hay bienes nuevos';
+  }
+  function hojaSel(ix){ return st.hojas.length>1 ? `<div style="margin:12px 0"><label>Hoja del libro</label><select id="impHoja">${st.hojas.map((h,k)=>`<option value="${k}" ${k===ix?'selected':''}>${esc(h.nombre)}</option>`).join('')}</select></div>` : ''; }
+  function enlazarHoja(){ if($('impHoja')) $('impHoja').onchange=e=>pintarPaso2(Number(e.target.value)); }
+  $('btnImp').onclick = async ()=>{
+    const tipo = $('impTipo').value;
+    const op = {Especialidad:$('impEsp').value.trim(), ModoAdquisicion:$('impModo').value, Ubicacion:$('impUbic').value.trim(), Responsable:$('impResp').value,
+      FechaIngreso:$('impFecha').value, FechaBaja:$('impFBaja').value, Causal:$('impCausal').value, Acta:$('impActa').value.trim()};
+    if(tipo==='Baja' && !op.FechaBaja) return m.msg('Indique la fecha de la baja.','err');
+    const nuevos = st.filas.filter(f=>f.st==='nuevo');
+    if(!confirm(`¿Importar ${nuevos.length} bienes como ${tipo==='Baja'?'bajas históricas':'activos'}?`)) return;
+    const b=$('btnImp'); b.disabled=true;
+    let cons='', total=0; const omit=[], errs=[];
+    try{
+      for(let k=0;k<nuevos.length;k+=300){
+        b.innerHTML = `<span class="spin"></span> Importando ${Math.min(k+300,nuevos.length)} de ${nuevos.length}…`;
+        const r = await api('invImportar',{datos:{Filas:nuevos.slice(k,k+300), Opciones:op, Tipo:tipo, Archivo:st.archivo, Consecutivo:cons}});
+        if(!r.ok){ m.msg(r.error,'err'); b.disabled=false; b.textContent='Reintentar'; return; }
+        cons=r.consecutivo; total+=r.importados; omit.push(...r.omitidas); errs.push(...r.errores);
+      }
+      m.remove(); await cargarInv(); pintarInventario();
+      aviso(`Importación ${cons}: ${total} bienes cargados`+(omit.length?`, ${omit.length} ya existían`:'')+(errs.length?`, ${errs.length} con error`:''));
+    }catch(e){ m.msg('No se pudo conectar con el servidor. Lo importado hasta ahora quedó guardado; vuelva a subir el archivo y solo se cargarán los faltantes.','err'); b.disabled=false; b.textContent='Reintentar'; }
+  };
 }
 
 /* Generador .xlsx propio (sin librerías externas): ZIP sin compresión + SpreadsheetML */
