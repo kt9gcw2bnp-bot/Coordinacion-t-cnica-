@@ -81,6 +81,8 @@ function doPost(e) {
       case 'invTraslado':     return json(conSesion(body, u => invTraslado(u, body.datos || {}), true));
       case 'invBaja':         return json(conSesion(body, u => invBaja(u, body.datos || {}), true));
       case 'invAnularBaja':   return json(conSesion(body, u => invAnularBaja(u, body.datos || {}), true));
+      case 'invEliminar':     return json(conSesion(body, u => invEliminar(u, body.datos || {}), true));
+      case 'invCorregirPlaca':return json(conSesion(body, u => invCorregirPlaca(u, body.datos || {}), true));
       case 'invImportar':     return json(conSesion(body, u => invImportar(u, body.datos || {}), true));
       case 'cfgGuardar':      return json(conSesion(body, u => cfgGuardar(u, body.datos || {}), true));
       default:                return json({ ok: false, error: 'Acción no reconocida.' });
@@ -260,7 +262,7 @@ function invListar(u) {
   const todos = filas('Inventario').map(invPub);
   const items = veTodo(u) ? todos : todos.filter(i => i.Responsable === u.Correo);
   const res = {
-    ok: true, version: 4, esAdmin: esAdminU(u), veTodo: veTodo(u), yo: u.Correo,
+    ok: true, version: 5, esAdmin: esAdminU(u), veTodo: veTodo(u), yo: u.Correo,
     items: items, config: leerConfig(), nombres: nombresUsuarios(),
     catalogos: { estados: ESTADOS, modos: MODOS, causales: Object.keys(CAUSALES), requisitos: CAUSALES }
   };
@@ -444,6 +446,52 @@ function cfgGuardar(u, d) {
   });
   bitacora(u.Correo, 'config', 'Datos institucionales');
   return { ok: true, config: leerConfig() };
+}
+
+/* Eliminación de registros erróneos (bienes que nunca debieron registrarse).
+   Deja constancia en Movimientos con la justificación y una copia de los datos eliminados. */
+function invEliminar(u, d) {
+  const placas = (d.Placas || (d.Placa ? [d.Placa] : [])).map(p => txt(p, 20)).filter(Boolean);
+  const just = txt(d.Justificacion, 500);
+  if (!placas.length) return { ok: false, error: 'Seleccione al menos un bien.' };
+  if (just.length < 10) return { ok: false, error: 'Escriba la justificación (mínimo 10 caracteres).' };
+  const h = hoja('Inventario'), todas = filas('Inventario');
+  const sel = placas.map(p => invBuscarFila(p, todas));
+  const noEsta = placas.filter((p, k) => !sel[k]);
+  if (noEsta.length) return { ok: false, error: 'No se encontraron: ' + noEsta.join(', ') };
+  const deBaja = placas.filter((p, k) => sel[k].Situacion === 'Baja');
+  if (deBaja.length) return { ok: false, error: 'Estos bienes están dados de baja; primero anule la baja: ' + deBaja.join(', ') };
+  const cons = siguienteConsecutivo('EL', hoyCR());
+  sel.forEach(r => {
+    const o = invPub(r);
+    registrarMov({ Consecutivo: cons, Fecha: hoyCR(), Tipo: 'Eliminación de registro erróneo', Placa: o.Placa, Descripcion: o.Descripcion, Estado: o.Estado,
+      DeUbicacion: o.Ubicacion, DeResponsable: o.Responsable,
+      Detalle: just + ' · Datos eliminados: ' + JSON.stringify({ Marca: o.Marca, Modelo: o.Modelo, Serie: o.Serie, Modo: o.ModoAdquisicion, TFA: o.TFA, Ingreso: o.FechaIngreso }) }, u.Correo);
+  });
+  sel.map(r => r._fila).sort((a, b) => b - a).forEach(f => h.deleteRow(f));
+  bitacora(u.Correo, 'inv_eliminado', cons + ' · ' + placas.join(', '));
+  return { ok: true, consecutivo: cons, eliminadas: placas };
+}
+
+/* Corrección de una placa mal digitada: conserva el historial del bien */
+function invCorregirPlaca(u, d) {
+  const placa = txt(d.Placa, 20), nueva = txt(d.PlacaNueva, 20).replace(/\s+/g, '');
+  const just = txt(d.Justificacion, 500);
+  if (!/^\d{4}-\d{1,6}$/.test(nueva)) return { ok: false, error: 'La placa correcta debe tener el formato 6526-0000.' };
+  if (nueva === placa) return { ok: false, error: 'La placa nueva es igual a la actual.' };
+  if (just.length < 10) return { ok: false, error: 'Escriba la justificación (mínimo 10 caracteres).' };
+  const todas = filas('Inventario'), r = invBuscarFila(placa, todas);
+  if (!r) return { ok: false, error: 'No se encontró la placa ' + placa + '.' };
+  if (r.Situacion === 'Baja') return { ok: false, error: 'No se puede corregir la placa de un bien dado de baja.' };
+  if (invBuscarFila(nueva, todas)) return { ok: false, error: 'La placa ' + nueva + ' ya está registrada.' };
+  const o = invPub(r); o.Placa = nueva;
+  const item = invEscribir(r._fila, o, u.Correo);
+  const hm = hoja('Movimientos'), em = encabezado(hm), cp = em.indexOf('Placa') + 1;
+  filas('Movimientos').forEach(m => { if (String(m.Placa) === placa) hm.getRange(m._fila, cp).setValue(nueva); });
+  registrarMov({ Fecha: hoyCR(), Tipo: 'Corrección de placa', Placa: nueva, Descripcion: o.Descripcion, Estado: o.Estado,
+    AUbicacion: o.Ubicacion, AResponsable: o.Responsable, Detalle: 'Placa anterior: ' + placa + '. ' + just }, u.Correo);
+  bitacora(u.Correo, 'inv_placa_corregida', placa + ' → ' + nueva);
+  return { ok: true, item: item, anterior: placa };
 }
 
 /* Importación desde Excel (solo Administrador). No duplica placas ni reactiva placas dadas de baja. */

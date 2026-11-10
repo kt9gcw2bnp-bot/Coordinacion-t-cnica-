@@ -154,6 +154,8 @@ input:disabled,select:disabled{background:#F4F6F9;color:var(--texto)}
 .tabla-wrap.mini{max-height:220px;overflow:auto;border:1px solid var(--borde);border-radius:4px}.tabla-wrap.mini table{font-size:12.5px}
 .modal-pie{flex-wrap:wrap}
 
+.btn-borrar{background:#fff;color:#B42318;border:1px solid #E7A39A}.btn-borrar:hover{background:#FDECEA}
+.barra-sel .btn.btn-borrar{background:#fff;color:#B42318}
 .barra-sel.vacia{background:#EEF3FB;color:var(--navy);border:1px dashed #9DB2D3;font-size:13px}.barra-sel.vacia b{margin:0}
 .zona-archivo{display:flex;flex-direction:column;align-items:center;gap:4px;border:2px dashed #9DB2D3;border-radius:8px;padding:22px;margin:14px 0;background:#F7F9FC;cursor:pointer;text-align:center}
 .zona-archivo input{position:absolute;opacity:0;width:1px;height:1px}.zona-archivo span{font-size:15px;font-weight:600;color:var(--navy)}.zona-archivo small{color:var(--suave)}
@@ -580,7 +582,7 @@ function pintarInventario(){
     <button class="btn btn-auto btn-sec" id="btnExportar">Exportar a Excel</button>`;
   const resps = [...new Set(INV.items.map(i=>i.Responsable).filter(Boolean))].map(c=>[c,nombreDe(c)]).sort((a,b)=>a[1].localeCompare(b[1]));
   $('invCuerpo').innerHTML = `
-    ${INV.version<4?'<div class="msg err" style="margin:0 0 16px">El servidor (Apps Script) tiene una versión anterior del código: los traslados, las bajas y la importación no van a funcionar. Pegue el código nuevo y publique una <b>Nueva versión</b> en Implementar → Gestionar implementaciones.</div>':''}
+    ${INV.version<5?'<div class="msg err" style="margin:0 0 16px">El servidor (Apps Script) tiene una versión anterior del código: los traslados, las bajas y la importación no van a funcionar. Pegue el código nuevo y publique una <b>Nueva versión</b> en Implementar → Gestionar implementaciones.</div>':''}
     <div class="kpis">${kpisHtml(act,'Bienes activos')}<div class="kpi baja"><span>Dados de baja</span><b>${INV.items.length-act.length}</b></div></div>
     <div class="panel">
       <div class="barra">
@@ -649,10 +651,12 @@ function pintarBarraSel(){
   b.innerHTML = `<b>${n} bien${n===1?'':'es'} seleccionado${n===1?'':'s'}</b>
     <button class="btn btn-auto" id="selTras">Trasladar / asignar</button>
     <button class="btn btn-auto btn-peligro" id="selBaja">Dar de baja</button>
+    <button class="btn btn-auto btn-borrar" id="selEliminar">Eliminar registros</button>
     <button class="enlace" id="selLimpiar">Quitar selección</button>`;
   const lista = ()=>[...INV.sel].map(p=>INV.items.find(i=>i.Placa===p)).filter(Boolean);
   $('selTras').onclick=()=>formTraslado(lista());
   $('selBaja').onclick=()=>formBaja(lista());
+  $('selEliminar').onclick=()=>formEliminar(lista());
   $('selLimpiar').onclick=()=>{ INV.sel.clear(); pintarTablaInv(); };
 }
 
@@ -705,14 +709,14 @@ function abrirBien(item, desdeMis){
       <datalist id="dlUbic">${unicos('Ubicacion').map(x=>`<option value="${esc(x)}">`).join('')}</datalist>
       <datalist id="dlEsp">${unicos('Especialidad').map(x=>`<option value="${esc(x)}">`).join('')}</datalist>
     </form>
-    ${!nuevo&&editable?'<p class="nota">La ubicación y la persona responsable solo cambian mediante <b>Trasladar / asignar</b>, para que quede la boleta y el registro del movimiento.</p>':''}
+    ${!nuevo&&editable?'<p class="nota"><b>Para corregir un dato</b>, cámbielo aquí y toque <b>Guardar cambios</b> (queda registrado qué se cambió). La ubicación y la persona responsable cambian con <b>Trasladar / asignar</b>; una placa mal digitada, con <b>Corregir placa</b>; y un bien registrado por error, con <b>Eliminar registro</b>.</p>':''}
     ${esMio?`<div class="caja-reporte"><h4>Reportar novedad del bien</h4><p class="nota">Como persona responsable, informe cualquier cambio en el estado o uso del bien (Reglamento 40797-H, art. 7 k).</p>
       <div class="grid-form"><div><label>Estado actual</label><select id="rEstado">${opciones(INV.cat.estados,i.Estado)}</select></div>
       <div class="ancho2"><label>Detalle</label><input id="rDetalle" placeholder="Ej. la pantalla no enciende desde el 3 de noviembre"></div></div>
       <button class="btn btn-auto" id="btnReportar" type="button">Enviar reporte</button></div>`:''}
     ${!nuevo?'<div class="historial"><h4>Historial de movimientos</h4><div id="histMov">Cargando…</div></div>':''}`;
   const pie = `
-    ${INV.esAdmin && !nuevo && !baja && !desdeMis ? '<button class="btn btn-auto btn-sec" id="fTras">Trasladar / asignar</button><button class="btn btn-auto btn-peligro" id="fBaja">Dar de baja</button>':''}
+    ${INV.esAdmin && !nuevo && !baja && !desdeMis ? '<button class="btn btn-auto btn-sec" id="fTras">Trasladar / asignar</button><button class="btn btn-auto btn-sec" id="fPlaca">Corregir placa</button><button class="btn btn-auto btn-sec btn-borrar" id="fEliminar">Eliminar registro</button><button class="btn btn-auto btn-peligro" id="fBaja">Dar de baja</button>':''}
     ${baja ? '<button class="btn btn-auto btn-sec" id="fActa">Acta de baja (PDF)</button><button class="btn btn-auto btn-sec" id="fCert">Certificación (PDF)</button>':''}
     ${INV.esAdmin && baja ? '<button class="btn btn-auto btn-sec" id="fAnular">Anular baja</button>':''}
     ${editable?`<button class="btn btn-auto" id="btnGuardarBien">${nuevo?'Registrar':'Guardar cambios'}</button>`:''}`;
@@ -720,6 +724,8 @@ function abrirBien(item, desdeMis){
   if($('btnGuardarBien')) $('btnGuardarBien').onclick = ()=>guardarBien(nuevo, m);
   if($('fTras')) $('fTras').onclick = ()=>{ m.remove(); formTraslado([i]); };
   if($('fBaja')) $('fBaja').onclick = ()=>{ m.remove(); formBaja([i]); };
+  if($('fPlaca')) $('fPlaca').onclick = ()=>formCorregirPlaca(i);
+  if($('fEliminar')) $('fEliminar').onclick = ()=>formEliminar([i]);
   if($('fActa')) $('fActa').onclick = ()=>docBaja(i.ConsecutivoBaja,'acta');
   if($('fCert')) $('fCert').onclick = ()=>docBaja(i.ConsecutivoBaja,'cert');
   if($('fAnular')) $('fAnular').onclick = ()=>formAnular(i);
@@ -853,6 +859,60 @@ function formBaja(lista){
       aviso('Baja registrada: '+r.consecutivo);
       docBaja(r.consecutivo,'acta');
     }catch(e){ m.msg('No se pudo conectar con el servidor.','err'); cargando(b,false,'Registrar baja'); }
+  };
+}
+
+/* Eliminar registros erróneos (uno o varios) */
+function formEliminar(lista){
+  const uno = lista.length===1, clave = uno ? lista[0].Placa : 'ELIMINAR';
+  const m = modal('modalElim', `Eliminar registro${uno?'':'s'} erróneo${uno?'':'s'} · ${lista.length} bien${uno?'':'es'}`, `
+    <div class="msg err" style="margin:0 0 12px">Use esta opción solo para bienes que <b>se registraron por error</b> (no existen, se digitaron dos veces o vienen de una importación equivocada). Si el bien existe y sale del inventario, use <b>Dar de baja</b>.</div>
+    ${tablaMini(lista)}
+    <div class="grid-form" style="margin-top:14px">
+      <div class="ancho3"><label>Justificación</label><input id="eJust" placeholder="Ej. se importó por error la hoja de otra especialidad"></div>
+      <div class="ancho3"><label>Para confirmar, escriba <b>${esc(clave)}</b></label><input id="eConf" autocomplete="off"></div>
+    </div>
+    <p class="nota">El registro sale del inventario, pero queda en el historial una constancia con la justificación, los datos eliminados, su nombre y la fecha.</p>`,
+    '<button class="btn btn-auto btn-borrar" id="btnElim">Eliminar</button>', 760);
+  $('btnElim').onclick = async ()=>{
+    const just=$('eJust').value.trim();
+    if(just.length<10) return m.msg('Escriba la justificación (mínimo 10 caracteres).','err');
+    if($('eConf').value.trim().toUpperCase()!==clave.toUpperCase()) return m.msg('Escriba '+clave+' para confirmar.','err');
+    const b=$('btnElim'); cargando(b,true);
+    try{
+      const r=await api('invEliminar',{datos:{Placas:lista.map(i=>i.Placa), Justificacion:just}});
+      if(!r.ok){ m.msg(r.error,'err'); cargando(b,false,'Eliminar'); return; }
+      INV.items = INV.items.filter(i=>!r.eliminadas.includes(i.Placa));
+      r.eliminadas.forEach(p=>INV.sel.delete(p));
+      m.remove(); if($('modalBien')) $('modalBien').remove(); refrescarVista();
+      aviso(`Registro${uno?'':'s'} eliminado${uno?'':'s'} (${r.consecutivo}): ${r.eliminadas.length}`);
+    }catch(e){ m.msg('No se pudo conectar con el servidor.','err'); cargando(b,false,'Eliminar'); }
+  };
+}
+
+/* Corregir una placa mal digitada */
+function formCorregirPlaca(i){
+  const m = modal('modalPlaca','Corregir placa · '+esc(i.Placa), `
+    <p class="nota">Para errores de digitación. El bien conserva sus datos y su historial; queda registrada la placa anterior y la justificación.</p>
+    <div class="grid-form" style="margin-top:10px">
+      <div><label>Placa actual</label><input value="${esc(i.Placa)}" disabled></div>
+      <div><label>Placa correcta</label><input id="pNueva" placeholder="6526-0000"></div>
+      <div class="ancho3"><label>Justificación</label><input id="pJust" placeholder="Ej. se digitó 6526-0437 en lugar de 6526-0473"></div>
+    </div>`, '<button class="btn btn-auto" id="btnPlaca">Corregir</button>', 620);
+  $('pNueva').focus();
+  $('btnPlaca').onclick = async ()=>{
+    const datos={Placa:i.Placa, PlacaNueva:$('pNueva').value.trim(), Justificacion:$('pJust').value.trim()};
+    if(!/^\d{4}-\d{1,6}$/.test(datos.PlacaNueva)) return m.msg('La placa correcta debe tener el formato 6526-0000.','err');
+    if(datos.Justificacion.length<10) return m.msg('Escriba la justificación (mínimo 10 caracteres).','err');
+    const b=$('btnPlaca'); cargando(b,true);
+    try{
+      const r=await api('invCorregirPlaca',{datos});
+      if(!r.ok){ m.msg(r.error,'err'); cargando(b,false,'Corregir'); return; }
+      INV.items = INV.items.filter(x=>x.Placa!==r.anterior); actualizarLocal(r.item);
+      if(INV.sel.delete(r.anterior)) INV.sel.add(r.item.Placa);
+      m.remove(); if($('modalBien')) $('modalBien').remove(); refrescarVista();
+      aviso('Placa corregida: '+r.anterior+' → '+r.item.Placa); abrirBien(r.item);
+    }catch(e){ m.msg('No se pudo conectar con el servidor.','err'); cargando(b,false,'Corregir'); }
   };
 }
 
