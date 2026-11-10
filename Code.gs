@@ -49,6 +49,7 @@ function setup() {
   const admin = norm(CONFIG.ADMIN_INICIAL);
   if (!buscarUsuario(admin)) {
     hoja('Usuarios').appendRow([admin, CONFIG.NOMBRE_ADMIN_INICIAL, 'Administrador', 'SI', new Date(), 'setup', '']);
+    tocar();
   }
   bitacora(admin, 'setup', 'Instalación inicial');
   Logger.log('Listo. Administrador: ' + admin);
@@ -60,12 +61,14 @@ function doGet() {
 }
 
 function doPost(e) {
+  tocar();  // cada solicitud empieza sin datos en memoria
   let body;
   try { body = JSON.parse(e.postData.contents); }
   catch (err) { return json({ ok: false, error: 'Solicitud inválida.' }); }
 
-  const lock = LockService.getScriptLock();
-  lock.waitLock(15000);
+  const lectura = ['sesion', 'invListar', 'invMovimientos', 'listarUsuarios'].indexOf(body.action) >= 0;
+  const lock = lectura ? null : LockService.getScriptLock();
+  if (lock) lock.waitLock(15000);
   try {
     switch (body.action) {
       case 'solicitarCodigo': return json(solicitarCodigo(body));
@@ -91,7 +94,7 @@ function doPost(e) {
     bitacora('', 'error', String(err && err.stack || err));
     return json({ ok: false, error: 'Error del servidor. Intente de nuevo.' });
   } finally {
-    lock.releaseLock();
+    if (lock) lock.releaseLock();
   }
 }
 
@@ -113,7 +116,7 @@ function solicitarCodigo(body) {
 
   const codigo = String(Math.floor(100000 + Math.random() * 900000));
   const expira = new Date(ahora.getTime() + CONFIG.MINUTOS_CODIGO * 60000);
-  h.appendRow([correo, hash(correo + '|' + codigo), expira, 0, ahora]);
+  h.appendRow([correo, hash(correo + '|' + codigo), expira, 0, ahora]); tocar();
 
   MailApp.sendEmail({
     to: correo,
@@ -146,7 +149,7 @@ function verificarCodigo(body) {
       bitacora(correo, 'codigo_bloqueado', 'Demasiados intentos');
       return { ok: false, error: 'Demasiados intentos. Solicite un código nuevo.' };
     }
-    h.getRange(r._fila, 4).setValue(intentos);
+    h.getRange(r._fila, 4).setValue(intentos); tocar();
     return { ok: false, error: 'Código incorrecto. Le quedan ' + (CONFIG.MAX_INTENTOS - intentos) + ' intentos.' };
   }
   borrarFilas(h, [r]);
@@ -158,15 +161,22 @@ function verificarCodigo(body) {
   const token = Utilities.getUuid().replace(/-/g, '') + Utilities.getUuid().replace(/-/g, '');
   const ahora = new Date();
   hoja('Sesiones').appendRow([hash(token), correo, new Date(ahora.getTime() + CONFIG.HORAS_SESION * 3600000), ahora]);
-  hoja('Usuarios').getRange(u._fila, 7).setValue(ahora);
+  hoja('Usuarios').getRange(u._fila, 7).setValue(ahora); tocar();
   bitacora(correo, 'ingreso', '');
   return { ok: true, token: token, usuario: publico(u) };
 }
 
 function conSesion(body, fn, soloAdmin) {
   const t = hash(String(body.token || ''));
-  const s = filas('Sesiones').find(x => x.Token === t);
-  if (!s || new Date(s.Expira) < new Date()) return { ok: false, sesion: false, error: 'Su sesión venció. Ingrese de nuevo.' };
+  const cache = CacheService.getScriptCache(), clave = 'ses_' + t;
+  let s = null;
+  const c = cache.get(clave);
+  if (c) s = JSON.parse(c);
+  else {
+    const r = filas('Sesiones').find(x => x.Token === t);
+    if (r) { s = { Correo: norm(r.Correo), Expira: new Date(r.Expira).getTime() }; cache.put(clave, JSON.stringify(s), 900); }
+  }
+  if (!s || s.Expira < Date.now()) return { ok: false, sesion: false, error: 'Su sesión venció. Ingrese de nuevo.' };
   const u = buscarUsuario(s.Correo);
   if (!u || u.Activo !== 'SI') return { ok: false, sesion: false, error: 'Su acceso fue deshabilitado.' };
   if (soloAdmin && u.Rol !== 'Administrador') return { ok: false, error: 'Solo el administrador puede hacer esto.' };
@@ -175,6 +185,7 @@ function conSesion(body, fn, soloAdmin) {
 
 function cerrarSesion(body) {
   const t = hash(String(body.token || ''));
+  CacheService.getScriptCache().remove('ses_' + t);
   borrarFilas(hoja('Sesiones'), filas('Sesiones').filter(x => x.Token === t));
   return { ok: true };
 }
@@ -201,6 +212,7 @@ function guardarUsuario(admin, d) {
   } else {
     h.appendRow([correo, nombre, rol, activo, new Date(), admin.Correo, '']);
   }
+  tocar();
   if (activo === 'NO') borrarFilas(hoja('Sesiones'), filas('Sesiones').filter(x => x.Correo === correo));
   bitacora(admin.Correo, u ? 'usuario_editado' : 'usuario_agregado', correo + ' · ' + rol + ' · ' + activo);
   return listarUsuarios();
@@ -262,7 +274,7 @@ function invListar(u) {
   const todos = filas('Inventario').map(invPub);
   const items = veTodo(u) ? todos : todos.filter(i => i.Responsable === u.Correo);
   const res = {
-    ok: true, version: 5, esAdmin: esAdminU(u), veTodo: veTodo(u), yo: u.Correo,
+    ok: true, version: 6, esAdmin: esAdminU(u), veTodo: veTodo(u), yo: u.Correo,
     items: items, config: leerConfig(), nombres: nombresUsuarios(),
     catalogos: { estados: ESTADOS, modos: MODOS, causales: Object.keys(CAUSALES), requisitos: CAUSALES }
   };
@@ -273,18 +285,34 @@ function invListar(u) {
 function invBuscarFila(placa, todas) { return (todas || filas('Inventario')).find(r => String(r.Placa).trim() === placa) || null; }
 
 function invEscribir(fila, o, quien) {
-  o.Actualizado = ahoraCR();
-  o.ActualizadoPor = quien;
-  const h = hoja('Inventario');
-  const vals = [encabezado(h).map(c => String(o[c] == null ? '' : o[c]))];
-  if (fila) h.getRange(fila, 1, 1, vals[0].length).setValues(vals);
-  else { capacidad(h, 1); h.getRange(h.getLastRow() + 1, 1, 1, vals[0].length).setValues(vals); }
-  return invPub(o);
+  return escribirVarias([{ fila: fila, o: o }], quien)[0];
 }
 
-function registrarMov(m, quien) {
-  const h = hoja('Movimientos');
-  h.appendRow(encabezado(h).map(c => c === 'RegistradoPor' ? quien : c === 'Registrado' ? ahoraCR() : String(m[c] == null ? '' : m[c])));
+/* Escribe varios bienes con el menor número de llamadas a la hoja */
+function escribirVarias(cambios, quien) {
+  const h = hoja('Inventario'), enc = encab('Inventario'), ahora = ahoraCR();
+  const fila = o => enc.map(c => String(o[c] == null ? '' : o[c]));
+  cambios.forEach(c => { c.o.Actualizado = ahora; c.o.ActualizadoPor = quien; });
+  const existentes = cambios.filter(c => c.fila), nuevos = cambios.filter(c => !c.fila);
+  if (existentes.length > 3) {
+    const nums = existentes.map(c => c.fila), min = Math.min.apply(null, nums), max = Math.max.apply(null, nums);
+    const rng = h.getRange(min, 1, max - min + 1, enc.length), v = rng.getValues();
+    existentes.forEach(c => v[c.fila - min] = fila(c.o));
+    rng.setValues(v);
+  } else existentes.forEach(c => h.getRange(c.fila, 1, 1, enc.length).setValues([fila(c.o)]));
+  if (nuevos.length) { capacidad(h, nuevos.length); h.getRange(h.getLastRow() + 1, 1, nuevos.length, enc.length).setValues(nuevos.map(c => fila(c.o))); }
+  tocar();
+  return cambios.map(c => invPub(c.o));
+}
+
+function registrarMov(m, quien) { registrarMovs([m], quien); }
+function registrarMovs(lista, quien) {
+  if (!lista.length) return;
+  const h = hoja('Movimientos'), em = encab('Movimientos'), ahora = ahoraCR();
+  capacidad(h, lista.length);
+  h.getRange(h.getLastRow() + 1, 1, lista.length, em.length)
+    .setValues(lista.map(m => em.map(c => c === 'RegistradoPor' ? quien : c === 'Registrado' ? ahora : String(m[c] == null ? '' : m[c]))));
+  tocar();
 }
 
 function siguienteConsecutivo(prefijo, fecha) {
@@ -352,15 +380,17 @@ function invTraslado(u, d) {
   const falta = placas.filter((p, k) => !sel[k] || sel[k].Situacion === 'Baja');
   if (falta.length) return { ok: false, error: 'No se pueden trasladar (no existen o están de baja): ' + falta.join(', ') };
   const cons = siguienteConsecutivo('TR', d.Fecha);
-  const items = sel.map(r => {
+  const cambios = [], movs = [];
+  sel.forEach(r => {
     const o = invPub(r), de = { u: o.Ubicacion, r: o.Responsable };
     if (txt(d.AUbicacion)) { o.Ubicacion = txt(d.AUbicacion); o.UbicacionReal = txt(d.AUbicacionReal) || o.UbicacionReal; }
     if (cambiaResp) o.Responsable = nuevoResp;
-    const it = invEscribir(r._fila, o, u.Correo);
-    registrarMov({ Consecutivo: cons, Fecha: d.Fecha, Tipo: 'Traslado', Placa: o.Placa, Descripcion: o.Descripcion, Estado: o.Estado,
-      DeUbicacion: de.u, AUbicacion: o.Ubicacion, DeResponsable: de.r, AResponsable: o.Responsable, Detalle: txt(d.Motivo, 500) }, u.Correo);
-    return it;
+    cambios.push({ fila: r._fila, o: o });
+    movs.push({ Consecutivo: cons, Fecha: d.Fecha, Tipo: 'Traslado', Placa: o.Placa, Descripcion: o.Descripcion, Estado: o.Estado,
+      DeUbicacion: de.u, AUbicacion: o.Ubicacion, DeResponsable: de.r, AResponsable: o.Responsable, Detalle: txt(d.Motivo, 500) });
   });
+  const items = escribirVarias(cambios, u.Correo);
+  registrarMovs(movs, u.Correo);
   bitacora(u.Correo, 'inv_traslado', cons + ' · ' + placas.length + ' bienes');
   return { ok: true, consecutivo: cons, items: items };
 }
@@ -385,15 +415,17 @@ function invBaja(u, d) {
   const detalle = {};
   ['SesionJunta', 'AcuerdoJunta', 'FechaAcuerdo', 'AnotacionTFA', 'Observaciones'].concat(req.campos).forEach(c => detalle[c] = txt(d[c], 500));
   const cons = siguienteConsecutivo('BJ', d.Fecha);
-  const items = sel.map(r => {
+  const cambios = [], movs = [];
+  sel.forEach(r => {
     const o = invPub(r);
     o.Situacion = 'Baja'; o.FechaBaja = d.Fecha; o.MotivoBaja = causal; o.ActaBaja = txt(d.Acta, 30); o.ConsecutivoBaja = cons;
-    const it = invEscribir(r._fila, o, u.Correo);
-    registrarMov({ Consecutivo: cons, Fecha: d.Fecha, Tipo: 'Baja', Placa: o.Placa, Descripcion: o.Descripcion, Estado: o.Estado,
+    cambios.push({ fila: r._fila, o: o });
+    movs.push({ Consecutivo: cons, Fecha: d.Fecha, Tipo: 'Baja', Placa: o.Placa, Descripcion: o.Descripcion, Estado: o.Estado,
       DeUbicacion: o.Ubicacion, DeResponsable: o.Responsable, Causal: causal,
-      Detalle: JSON.stringify(Object.assign({ Acta: o.ActaBaja, TFA: o.TFA, Marca: o.Marca, Modelo: o.Modelo, Serie: o.Serie }, detalle)) }, u.Correo);
-    return it;
+      Detalle: JSON.stringify(Object.assign({ Acta: o.ActaBaja, TFA: o.TFA, Marca: o.Marca, Modelo: o.Modelo, Serie: o.Serie }, detalle)) });
   });
+  const items = escribirVarias(cambios, u.Correo);
+  registrarMovs(movs, u.Correo);
   bitacora(u.Correo, 'inv_baja', cons + ' · ' + causal + ' · acta ' + d.Acta + ' · ' + placas.length + ' bienes');
   return { ok: true, consecutivo: cons, items: items };
 }
@@ -444,6 +476,7 @@ function cfgGuardar(u, d) {
     const v = txt(d[k], 150); const r = actual.find(x => x.Clave === k);
     if (r) h.getRange(r._fila, 2).setValue(v); else h.appendRow([k, v]);
   });
+  tocar();
   bitacora(u.Correo, 'config', 'Datos institucionales');
   return { ok: true, config: leerConfig() };
 }
@@ -462,13 +495,13 @@ function invEliminar(u, d) {
   const deBaja = placas.filter((p, k) => sel[k].Situacion === 'Baja');
   if (deBaja.length) return { ok: false, error: 'Estos bienes están dados de baja; primero anule la baja: ' + deBaja.join(', ') };
   const cons = siguienteConsecutivo('EL', hoyCR());
-  sel.forEach(r => {
+  registrarMovs(sel.map(r => {
     const o = invPub(r);
-    registrarMov({ Consecutivo: cons, Fecha: hoyCR(), Tipo: 'Eliminación de registro erróneo', Placa: o.Placa, Descripcion: o.Descripcion, Estado: o.Estado,
+    return { Consecutivo: cons, Fecha: hoyCR(), Tipo: 'Eliminación de registro erróneo', Placa: o.Placa, Descripcion: o.Descripcion, Estado: o.Estado,
       DeUbicacion: o.Ubicacion, DeResponsable: o.Responsable,
-      Detalle: just + ' · Datos eliminados: ' + JSON.stringify({ Marca: o.Marca, Modelo: o.Modelo, Serie: o.Serie, Modo: o.ModoAdquisicion, TFA: o.TFA, Ingreso: o.FechaIngreso }) }, u.Correo);
-  });
-  sel.map(r => r._fila).sort((a, b) => b - a).forEach(f => h.deleteRow(f));
+      Detalle: just + ' · Datos eliminados: ' + JSON.stringify({ Marca: o.Marca, Modelo: o.Modelo, Serie: o.Serie, Modo: o.ModoAdquisicion, TFA: o.TFA, Ingreso: o.FechaIngreso }) };
+  }), u.Correo);
+  borrarFilas(h, sel);
   bitacora(u.Correo, 'inv_eliminado', cons + ' · ' + placas.join(', '));
   return { ok: true, consecutivo: cons, eliminadas: placas };
 }
@@ -486,8 +519,13 @@ function invCorregirPlaca(u, d) {
   if (invBuscarFila(nueva, todas)) return { ok: false, error: 'La placa ' + nueva + ' ya está registrada.' };
   const o = invPub(r); o.Placa = nueva;
   const item = invEscribir(r._fila, o, u.Correo);
-  const hm = hoja('Movimientos'), em = encabezado(hm), cp = em.indexOf('Placa') + 1;
-  filas('Movimientos').forEach(m => { if (String(m.Placa) === placa) hm.getRange(m._fila, cp).setValue(nueva); });
+  const hm = hoja('Movimientos'), cp = encab('Movimientos').indexOf('Placa') + 1, nf = hm.getLastRow() - 1;
+  if (nf > 0) {
+    const rng = hm.getRange(2, cp, nf, 1), v = rng.getValues();
+    let hubo = false;
+    v.forEach(x => { if (String(x[0]) === placa) { x[0] = nueva; hubo = true; } });
+    if (hubo) { rng.setValues(v); tocar(); }
+  }
   registrarMov({ Fecha: hoyCR(), Tipo: 'Corrección de placa', Placa: nueva, Descripcion: o.Descripcion, Estado: o.Estado,
     AUbicacion: o.Ubicacion, AResponsable: o.Responsable, Detalle: 'Placa anterior: ' + placa + '. ' + just }, u.Correo);
   bitacora(u.Correo, 'inv_placa_corregida', placa + ' → ' + nueva);
@@ -504,7 +542,7 @@ function invImportar(u, d) {
   const resp = norm(op.Responsable);
   if (tipo === 'Activo' && resp && !usuarioActivo(resp)) return { ok: false, error: 'El responsable debe ser un usuario activo.' };
   if (tipo === 'Baja' && (!fechaOk(op.FechaBaja) || !CAUSALES[op.Causal])) return { ok: false, error: 'Para bajas históricas indique la fecha y la causal.' };
-  const h = hoja('Inventario'), enc = encabezado(h);
+  const h = hoja('Inventario'), enc = encab('Inventario');
   const existe = {};
   filas('Inventario').forEach(r => existe[String(r.Placa).trim()] = true);
   const fechaIng = fechaOk(op.FechaIngreso) ? op.FechaIngreso : hoyCR();
@@ -534,10 +572,11 @@ function invImportar(u, d) {
   if (nuevas.length) {
     capacidad(h, nuevas.length);
     h.getRange(h.getLastRow() + 1, 1, nuevas.length, enc.length).setValues(nuevas);
-    const hm = hoja('Movimientos'), em = encabezado(hm);
+    const hm = hoja('Movimientos'), em = encab('Movimientos');
     capacidad(hm, movs.length);
     hm.getRange(hm.getLastRow() + 1, 1, movs.length, em.length)
       .setValues(movs.map(m => em.map(c => c === 'RegistradoPor' ? u.Correo : c === 'Registrado' ? ahora : String(m[c] == null ? '' : m[c]))));
+    tocar();
   }
   bitacora(u.Correo, 'inv_importacion', cons + ' · ' + nuevas.length + ' nuevos · ' + omitidas.length + ' existentes · ' + errores.length + ' con error');
   return { ok: true, consecutivo: cons, importados: nuevas.length, omitidas: omitidas, errores: errores };
@@ -545,6 +584,7 @@ function invImportar(u, d) {
 
 /** Ejecutar UNA vez desde el editor: carga el inventario actual (activos y bajas). No duplica placas. */
 function importarInventarioInicial() {
+  tocar();
   const origen = SpreadsheetApp.openById(IMPORT_ID).getSheets()[0].getDataRange().getDisplayValues();
   const enc = origen.shift();
   const yaEstan = {};
@@ -561,7 +601,7 @@ function importarInventarioInicial() {
   const h = hoja('Inventario');
   const enc2 = encabezado(h);
   const matriz = nuevas.map(o => enc2.map(c => o[c] || ''));
-  if (matriz.length) { capacidad(h, matriz.length); h.getRange(h.getLastRow() + 1, 1, matriz.length, enc2.length).setValues(matriz); }
+  if (matriz.length) { capacidad(h, matriz.length); h.getRange(h.getLastRow() + 1, 1, matriz.length, enc2.length).setValues(matriz); tocar(); }
   bitacora('', 'inv_importacion', nuevas.length + ' bienes');
   Logger.log('Importados: ' + nuevas.length + ' bienes.');
 }
@@ -591,6 +631,7 @@ function hoja(n) {
     h.appendRow(HOJAS[n]);
     h.getRange(1, 1, 1, HOJAS[n].length).setFontWeight('bold').setBackground('#0B2A55').setFontColor('#FFFFFF');
     h.setFrozenRows(1);
+    tocar();
   } else if (h && HOJAS[n] && !_migradas[n]) {
     // Agrega al final las columnas nuevas que falten (actualización de versiones anteriores)
     const enc = h.getRange(1, 1, 1, Math.max(h.getLastColumn(), 1)).getValues()[0].map(String);
@@ -599,13 +640,24 @@ function hoja(n) {
       if (h.getMaxColumns() < enc.length + faltan.length) h.insertColumnsAfter(h.getMaxColumns(), faltan.length);
       h.getRange(1, enc.length + 1, 1, faltan.length).setValues([faltan]).setFontWeight('bold').setBackground('#0B2A55').setFontColor('#FFFFFF');
       if (n === 'Inventario') h.getRange(1, enc.length + 1, h.getMaxRows(), faltan.length).setNumberFormat('@');
+      tocar();
     }
     _migradas[n] = true;
   }
   return h;
 }
 
+// Memoria por solicitud: cada hoja se lee una sola vez; cualquier escritura la invalida.
+let _memo = {}, _enc = {}, _sal = null;
+function tocar() { _memo = {}; _enc = {}; }
+function encab(n) { if (!_enc[n]) _enc[n] = encabezado(hoja(n)); return _enc[n]; }
+
 function filas(n) {
+  if (_memo[n]) return _memo[n];
+  _memo[n] = leerFilas(n);
+  return _memo[n];
+}
+function leerFilas(n) {
   const v = hoja(n).getDataRange().getValues();
   const enc = v.shift() || [];
   return v.map((f, i) => {
@@ -617,6 +669,7 @@ function filas(n) {
 
 function borrarFilas(h, lista) {
   lista.map(r => r._fila).sort((a, b) => b - a).forEach(f => h.deleteRow(f));
+  if (lista.length) tocar();
 }
 
 function buscarUsuario(correo) {
@@ -642,7 +695,8 @@ function correoValido(c) {
 }
 
 function hash(s) {
-  const sal = PropertiesService.getScriptProperties().getProperty('SAL') || '';
+  if (_sal === null) _sal = PropertiesService.getScriptProperties().getProperty('SAL') || '';
+  const sal = _sal;
   return Utilities.computeDigest(Utilities.DigestAlgorithm.SHA_256, sal + s, Utilities.Charset.UTF_8)
     .map(b => ('0' + (b & 0xff).toString(16)).slice(-2)).join('');
 }

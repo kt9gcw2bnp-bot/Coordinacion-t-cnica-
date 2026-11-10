@@ -156,6 +156,7 @@ input:disabled,select:disabled{background:#F4F6F9;color:var(--texto)}
 
 .btn-borrar{background:#fff;color:#B42318;border:1px solid #E7A39A}.btn-borrar:hover{background:#FDECEA}
 .barra-sel .btn.btn-borrar{background:#fff;color:#B42318}
+.sincro{font-size:12px;font-weight:400;color:var(--suave);margin-left:8px}
 .barra-sel.vacia{background:#EEF3FB;color:var(--navy);border:1px dashed #9DB2D3;font-size:13px}.barra-sel.vacia b{margin:0}
 .zona-archivo{display:flex;flex-direction:column;align-items:center;gap:4px;border:2px dashed #9DB2D3;border-radius:8px;padding:22px;margin:14px 0;background:#F7F9FC;cursor:pointer;text-align:center}
 .zona-archivo input{position:absolute;opacity:0;width:1px;height:1px}.zona-archivo span{font-size:15px;font-weight:600;color:var(--navy)}.zona-archivo small{color:var(--suave)}
@@ -402,6 +403,7 @@ $('btnSalir').addEventListener('click', async ()=>{
 
 function cerrarLocal(){
   sesion={token:null,usuario:null}; guardar('ct_token',null);
+  if(typeof borrarCacheInv==='function') borrarCacheInv();
   $('vistaApp').classList.add('oculto'); $('barraUsuario').classList.add('oculto');
   $('vistaLogin').classList.remove('oculto');
   $('paso2').classList.add('oculto'); $('paso1').classList.remove('oculto');
@@ -414,6 +416,7 @@ function entrar(){
   $('uNombre').textContent = sesion.usuario.nombre;
   $('uRol').textContent = sesion.usuario.rol;
   pintarMenu(); ir('inicio');
+  cargarInv().catch(()=>{});  // precarga en segundo plano
 }
 
 function esAdmin(){ return sesion.usuario && sesion.usuario.rol==='Administrador'; }
@@ -538,17 +541,48 @@ const CFG_CAMPOS = [['Institucion','Nombre del centro educativo'],['CodigoPresup
 
 function nombreDe(c){ return c ? (INV.nombres[c] || c) : 'Sin asignar'; }
 
-async function cargarInv(){
-  const r = await api('invListar');
-  if(!r.ok) throw new Error(r.error);
+/* Carga del inventario: una sola solicitud a la vez, copia en la sesión del navegador para mostrarlo al instante */
+let _cargaInv = null;
+function aplicarInv(r){
   Object.assign(INV, {version:r.version||0, items:r.items, cat:r.catalogos, esAdmin:r.esAdmin, veTodo:r.veTodo, yo:r.yo, config:r.config||{}, nombres:r.nombres||{}, usuarios:r.usuarios||[]});
-  INV.sel = new Set();
+  const placas = new Set(r.items.map(i=>i.Placa));
+  INV.sel = new Set([...INV.sel].filter(p=>placas.has(p)));
+  INV.cargadoEn = Date.now();
+}
+function cargarInv(){
+  if(_cargaInv) return _cargaInv;
+  _cargaInv = api('invListar').then(r=>{
+    _cargaInv = null;
+    if(!r.ok) throw new Error(r.error);
+    aplicarInv(r);
+    try{ sessionStorage.setItem('ct_inv', JSON.stringify(r)); }catch(e){}
+    return r;
+  }, e=>{ _cargaInv = null; throw e; });
+  return _cargaInv;
+}
+function restaurarInv(){
+  if(INV.cargadoEn) return true;
+  try{
+    const r = JSON.parse(sessionStorage.getItem('ct_inv')||'null');
+    if(r && r.ok && sesion.usuario && r.yo===sesion.usuario.correo){ aplicarInv(r); INV.cargadoEn = 1; return true; }
+  }catch(e){}
+  return false;
+}
+function borrarCacheInv(){ try{ sessionStorage.removeItem('ct_inv'); }catch(e){} INV.items=[]; INV.cargadoEn=0; INV.sel=new Set(); }
+function actualizarEnFondo(){
+  const ind = $('sincro'); if(ind) ind.textContent = 'Actualizando…';
+  cargarInv().then(()=>{
+    if(!$('invCuerpo') && !$('misCuerpo')) return;
+    if(document.activeElement && document.activeElement.id==='fQ') pintarTablaInv(); else refrescarVista();
+  }).catch(()=>{}).finally(()=>{ const i=$('sincro'); if(i) i.textContent=''; });
 }
 
 async function vistaInventario(c){
-  c.innerHTML = `<div class="encabezado fila-enc"><div><h2>Inventario institucional</h2><p>Registro y control de bienes según la normativa de control interno del MEP.</p></div>
+  c.innerHTML = `<div class="encabezado fila-enc"><div><h2>Inventario institucional <span id="sincro" class="sincro"></span></h2><p>Registro y control de bienes según la normativa de control interno del MEP.</p></div>
     <div class="enc-acciones" id="encAcc"></div></div><div id="invCuerpo"><div class="panel">Cargando inventario…</div></div>`;
-  try{ await cargarInv(); INV.limite=100; pintarInventario(); }
+  INV.limite=100;
+  if(restaurarInv()){ pintarInventario(); actualizarEnFondo(); return; }
+  try{ await cargarInv(); pintarInventario(); }
   catch(e){ $('invCuerpo').innerHTML = `<div class="panel">${esc(e.message||'No se pudo cargar el inventario.')}</div>`; }
 }
 
@@ -582,7 +616,7 @@ function pintarInventario(){
     <button class="btn btn-auto btn-sec" id="btnExportar">Exportar a Excel</button>`;
   const resps = [...new Set(INV.items.map(i=>i.Responsable).filter(Boolean))].map(c=>[c,nombreDe(c)]).sort((a,b)=>a[1].localeCompare(b[1]));
   $('invCuerpo').innerHTML = `
-    ${INV.version<5?'<div class="msg err" style="margin:0 0 16px">El servidor (Apps Script) tiene una versión anterior del código: los traslados, las bajas y la importación no van a funcionar. Pegue el código nuevo y publique una <b>Nueva versión</b> en Implementar → Gestionar implementaciones.</div>':''}
+    ${INV.version<6?'<div class="msg err" style="margin:0 0 16px">El servidor (Apps Script) tiene una versión anterior del código: los traslados, las bajas y la importación no van a funcionar. Pegue el código nuevo y publique una <b>Nueva versión</b> en Implementar → Gestionar implementaciones.</div>':''}
     <div class="kpis">${kpisHtml(act,'Bienes activos')}<div class="kpi baja"><span>Dados de baja</span><b>${INV.items.length-act.length}</b></div></div>
     <div class="panel">
       <div class="barra">
@@ -601,7 +635,7 @@ function pintarInventario(){
       <div class="tabla-wrap" id="invTabla"></div>
     </div>`;
   const re = ()=>{ INV.limite=100; pintarTablaInv(); };
-  $('fQ').addEventListener('input', e=>{ f.q=e.target.value; re(); });
+  $('fQ').addEventListener('input', e=>{ f.q=e.target.value; clearTimeout(INV.tq); INV.tq=setTimeout(re,160); });
   [['fUbic','ubic'],['fResp','resp'],['fEstado','estado'],['fModo','modo']].forEach(([id,k])=>$(id).onchange=e=>{ f[k]=e.target.value; re(); });
   $('fSit').querySelectorAll('button').forEach(b=>b.onclick=()=>{ f.sit=b.dataset.s; INV.sel.clear(); pintarInventario(); });
   if($('btnNuevo')) $('btnNuevo').onclick = ()=>abrirBien(null);
@@ -942,8 +976,9 @@ function abrirConfig(){
 
 /* ---------- Mis bienes (perfil del funcionario) ---------- */
 async function vistaMisBienes(c){
-  c.innerHTML = `<div class="encabezado fila-enc"><div><h2>Mis bienes</h2><p>Bienes institucionales asignados a su custodia.</p></div>
+  c.innerHTML = `<div class="encabezado fila-enc"><div><h2>Mis bienes <span id="sincro" class="sincro"></span></h2><p>Bienes institucionales asignados a su custodia.</p></div>
     <div class="enc-acciones"><button class="btn btn-auto" id="btnMiPdf" disabled>Descargar mi inventario (PDF)</button></div></div><div id="misCuerpo"><div class="panel">Cargando…</div></div>`;
+  if(restaurarInv()){ pintarMisBienes(); actualizarEnFondo(); return; }
   try{ await cargarInv(); pintarMisBienes(); }
   catch(e){ $('misCuerpo').innerHTML = `<div class="panel">${esc(e.message||'No se pudo cargar.')}</div>`; }
 }
