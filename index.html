@@ -1,0 +1,396 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Coordinación Técnica · Plataforma de Gestión</title>
+<style>
+:root{
+  --navy:#0B2A55; --navy2:#123A73; --oro:#C9A227; --fondo:#F3F5F9; --borde:#D5DCE6;
+  --texto:#1B2635; --suave:#5B6B80; --ok:#1E7B4F; --err:#B42318; --blanco:#FFFFFF;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;background:var(--fondo);color:var(--texto);min-height:100vh}
+button{font-family:inherit;cursor:pointer}
+.oculto{display:none!important}
+
+/* ---------- Franja institucional ---------- */
+.franja{background:var(--navy);color:#fff;border-bottom:4px solid var(--oro)}
+.franja-in{max-width:1200px;margin:auto;display:flex;align-items:center;gap:14px;padding:12px 20px}
+.escudo{width:42px;height:48px;flex:none}
+.franja h1{font-size:17px;font-weight:600;letter-spacing:.3px}
+.franja small{display:block;font-size:12px;opacity:.8;font-weight:400}
+.franja .der{margin-left:auto;display:flex;align-items:center;gap:14px;font-size:13px}
+.usuario-chip{text-align:right;line-height:1.3}
+.usuario-chip b{display:block;font-weight:600}
+.usuario-chip span{opacity:.75;font-size:12px}
+.btn-salir{background:transparent;color:#fff;border:1px solid rgba(255,255,255,.5);padding:7px 12px;border-radius:4px;font-size:13px}
+.btn-salir:hover{background:rgba(255,255,255,.1)}
+
+/* ---------- Login ---------- */
+.login-wrap{display:flex;justify-content:center;align-items:flex-start;padding:56px 16px}
+.tarjeta{background:#fff;border:1px solid var(--borde);border-top:4px solid var(--navy);border-radius:6px;width:100%;max-width:420px;padding:32px;box-shadow:0 4px 18px rgba(11,42,85,.06)}
+.tarjeta h2{font-size:20px;color:var(--navy);margin-bottom:6px}
+.tarjeta p.sub{color:var(--suave);font-size:14px;margin-bottom:24px;line-height:1.45}
+label{display:block;font-size:13px;font-weight:600;margin-bottom:6px;color:var(--texto)}
+input,select{width:100%;padding:11px 12px;border:1px solid var(--borde);border-radius:4px;font-size:15px;font-family:inherit;background:#fff;color:var(--texto)}
+input:focus,select:focus{outline:2px solid var(--navy2);outline-offset:0;border-color:var(--navy2)}
+.codigo{font-size:26px;letter-spacing:10px;text-align:center;font-weight:600}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;background:var(--navy);color:#fff;border:none;border-radius:4px;padding:12px 18px;font-size:15px;font-weight:600;width:100%;margin-top:16px}
+.btn:hover{background:var(--navy2)}
+.btn:disabled{opacity:.55;cursor:default}
+.btn-sec{background:#fff;color:var(--navy);border:1px solid var(--borde)}
+.btn-sec:hover{background:var(--fondo)}
+.enlaces{display:flex;justify-content:space-between;margin-top:14px;font-size:13px}
+.enlace{background:none;border:none;color:var(--navy2);text-decoration:underline;font-size:13px;padding:0}
+.enlace:disabled{color:var(--suave);text-decoration:none;cursor:default}
+.msg{margin-top:16px;padding:10px 12px;border-radius:4px;font-size:13.5px;line-height:1.4}
+.msg.ok{background:#E8F4EE;color:var(--ok);border:1px solid #BFE0CD}
+.msg.err{background:#FDECEA;color:var(--err);border:1px solid #F4C7C1}
+.aviso{margin-top:22px;padding-top:16px;border-top:1px solid var(--borde);font-size:12px;color:var(--suave);line-height:1.5}
+.spin{width:16px;height:16px;border:2px solid rgba(255,255,255,.4);border-top-color:#fff;border-radius:50%;animation:g .8s linear infinite}
+@keyframes g{to{transform:rotate(360deg)}}
+
+/* ---------- App ---------- */
+.app{max-width:1200px;margin:auto;display:grid;grid-template-columns:230px 1fr;gap:0;min-height:calc(100vh - 76px)}
+.lateral{background:#fff;border-right:1px solid var(--borde);padding:18px 0}
+.lateral .titulo-sec{font-size:11px;text-transform:uppercase;letter-spacing:1px;color:var(--suave);padding:0 20px 8px}
+.nav-item{display:flex;align-items:center;gap:10px;width:100%;background:none;border:none;border-left:3px solid transparent;padding:11px 20px;font-size:14px;color:var(--texto);text-align:left}
+.nav-item:hover{background:var(--fondo)}
+.nav-item.activo{background:#EEF2F8;border-left-color:var(--oro);color:var(--navy);font-weight:600}
+.nav-item svg{width:18px;height:18px;flex:none;stroke:currentColor;fill:none;stroke-width:1.8}
+.contenido{padding:28px 32px}
+.encabezado{margin-bottom:22px;padding-bottom:14px;border-bottom:1px solid var(--borde)}
+.encabezado h2{font-size:22px;color:var(--navy)}
+.encabezado p{color:var(--suave);font-size:14px;margin-top:4px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:16px}
+.mod{background:#fff;border:1px solid var(--borde);border-radius:6px;padding:18px;display:flex;flex-direction:column;gap:8px}
+.mod h3{font-size:15px;color:var(--navy)}
+.mod p{font-size:13px;color:var(--suave);line-height:1.45;flex:1}
+.estado{align-self:flex-start;font-size:11px;font-weight:600;padding:3px 8px;border-radius:10px;background:#FFF6DB;color:#7A5C00;border:1px solid #F0DC9C}
+.estado.listo{background:#E8F4EE;color:var(--ok);border-color:#BFE0CD}
+.panel{background:#fff;border:1px solid var(--borde);border-radius:6px;padding:20px;margin-bottom:18px}
+.panel h3{font-size:15px;color:var(--navy);margin-bottom:14px}
+.form-fila{display:grid;grid-template-columns:2fr 2fr 1.4fr 1fr auto;gap:10px;align-items:end}
+.form-fila .btn{margin-top:0;width:auto;padding:11px 16px}
+table{width:100%;border-collapse:collapse;font-size:13.5px}
+th{text-align:left;background:#F7F9FC;color:var(--suave);font-weight:600;font-size:12px;text-transform:uppercase;letter-spacing:.5px;padding:10px;border-bottom:1px solid var(--borde)}
+td{padding:10px;border-bottom:1px solid #EDF1F6;vertical-align:middle}
+.tag{font-size:11px;font-weight:600;padding:3px 8px;border-radius:10px}
+.tag.si{background:#E8F4EE;color:var(--ok)}
+.tag.no{background:#F1F3F6;color:var(--suave)}
+.btn-mini{background:#fff;border:1px solid var(--borde);border-radius:4px;padding:5px 10px;font-size:12px;color:var(--navy)}
+.btn-mini:hover{background:var(--fondo)}
+.tabla-wrap{overflow-x:auto}
+.pie{text-align:center;font-size:12px;color:var(--suave);padding:18px}
+
+@media (max-width:820px){
+  .app{grid-template-columns:1fr}
+  .lateral{display:flex;overflow-x:auto;border-right:none;border-bottom:1px solid var(--borde);padding:0}
+  .lateral .titulo-sec{display:none}
+  .nav-item{border-left:none;border-bottom:3px solid transparent;white-space:nowrap;padding:12px 14px}
+  .nav-item.activo{border-bottom-color:var(--oro)}
+  .contenido{padding:20px 16px}
+  .form-fila{grid-template-columns:1fr}
+  .form-fila .btn{width:100%}
+  .usuario-chip{display:none}
+  .franja h1{font-size:15px}
+}
+</style>
+</head>
+<body>
+
+<!-- ===================== FRANJA ===================== -->
+<header class="franja">
+  <div class="franja-in">
+    <svg class="escudo" viewBox="0 0 42 48" aria-hidden="true">
+      <path d="M21 2 L39 8 V22 C39 34 31 42 21 46 C11 42 3 34 3 22 V8 Z" fill="#C9A227"/>
+      <path d="M21 6 L35 10.5 V22 C35 32 28.5 38.5 21 41.8 C13.5 38.5 7 32 7 22 V10.5 Z" fill="#0B2A55"/>
+      <path d="M14 30 V21 M21 30 V17 M28 30 V23" stroke="#C9A227" stroke-width="3" stroke-linecap="round"/>
+    </svg>
+    <div>
+      <h1 id="tituloPlataforma">Coordinación Técnica</h1>
+      <small id="subInstitucion">Colegio Técnico Profesional · Plataforma de Gestión</small>
+    </div>
+    <div class="der oculto" id="barraUsuario">
+      <div class="usuario-chip"><b id="uNombre"></b><span id="uRol"></span></div>
+      <button class="btn-salir" id="btnSalir">Cerrar sesión</button>
+    </div>
+  </div>
+</header>
+
+<!-- ===================== LOGIN ===================== -->
+<main id="vistaLogin" class="login-wrap">
+  <section class="tarjeta">
+    <div id="paso1">
+      <h2>Ingreso a la plataforma</h2>
+      <p class="sub">Acceso exclusivo para personal autorizado. Ingrese su correo institucional y le enviaremos un código de verificación.</p>
+      <form id="formCorreo" novalidate>
+        <label for="correo">Correo institucional</label>
+        <input id="correo" type="email" autocomplete="email" placeholder="nombre.apellido@mep.go.cr" required>
+        <button class="btn" id="btnEnviar" type="submit">Enviar código de acceso</button>
+      </form>
+    </div>
+    <div id="paso2" class="oculto">
+      <h2>Verificación</h2>
+      <p class="sub">Escriba el código de 6 dígitos enviado a <b id="correoMostrado"></b>. Revise también la carpeta de correo no deseado.</p>
+      <form id="formCodigo" novalidate>
+        <label for="codigo">Código de acceso</label>
+        <input id="codigo" class="codigo" inputmode="numeric" autocomplete="one-time-code" maxlength="6" placeholder="••••••">
+        <button class="btn" id="btnIngresar" type="submit">Ingresar</button>
+      </form>
+      <div class="enlaces">
+        <button class="enlace" id="btnOtro" type="button">Usar otro correo</button>
+        <button class="enlace" id="btnReenviar" type="button" disabled>Reenviar código</button>
+      </div>
+    </div>
+    <div id="msgLogin" class="msg oculto" role="status"></div>
+    <div class="aviso">El acceso queda registrado. Si su correo no ha sido autorizado, solicítelo a la Coordinación Técnica.</div>
+  </section>
+</main>
+
+<!-- ===================== APLICACIÓN ===================== -->
+<div id="vistaApp" class="app oculto">
+  <nav class="lateral" id="menu">
+    <div class="titulo-sec">Menú</div>
+  </nav>
+  <main class="contenido" id="contenido"></main>
+</div>
+
+<div class="pie">Coordinación Técnica · Uso interno institucional</div>
+
+<script>
+/* =========================================================
+   CONFIGURACIÓN — pegue aquí la URL de su Web App de Apps Script
+   ========================================================= */
+const API_URL = 'https://script.google.com/macros/s/AKfycbwGDdP_mfgOkJKYhXjQ8tcgvx_toaD3UJ-rsdvr52O_wOrxUK-zz89xEezt5-J3dWp7/exec';
+const INSTITUCION = 'Colegio Técnico Profesional';
+
+/* ---------- Íconos ---------- */
+const IC = {
+  inicio:'<svg viewBox="0 0 24 24"><path d="M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></svg>',
+  esp:'<svg viewBox="0 0 24 24"><path d="M4 4h16v16H4z"/><path d="M4 10h16M10 10v10"/></svg>',
+  inv:'<svg viewBox="0 0 24 24"><path d="M3 7l9-4 9 4-9 4z"/><path d="M3 7v10l9 4 9-4V7"/><path d="M12 11v10"/></svg>',
+  ley:'<svg viewBox="0 0 24 24"><path d="M12 2v20M17 6H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>',
+  sol:'<svg viewBox="0 0 24 24"><path d="M4 4h16v12H8l-4 4z"/></svg>',
+  doc:'<svg viewBox="0 0 24 24"><path d="M6 2h9l5 5v15H6z"/><path d="M14 2v6h6M9 13h8M9 17h8"/></svg>',
+  usr:'<svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="4"/><path d="M2 21a7 7 0 0 1 14 0M17 11h6M20 8v6"/></svg>'
+};
+
+const MODULOS = [
+  {id:'inicio', nombre:'Inicio', icono:IC.inicio},
+  {id:'especialidades', nombre:'Especialidades', icono:IC.esp, desc:'Ficha de cada especialidad: docentes, grupos, matrícula y estado de talleres y laboratorios.'},
+  {id:'inventario', nombre:'Inventario', icono:IC.inv, desc:'Registro de equipo por especialidad con código QR, ubicación, estado e historial.'},
+  {id:'ley7372', nombre:'Ley 7372', icono:IC.ley, desc:'Plan de inversión y seguimiento de cada compra: solicitada, aprobada, adjudicada, recibida y pagada.'},
+  {id:'solicitudes', nombre:'Solicitudes', icono:IC.sol, desc:'Pedidos de equipo, reportes de daño y mantenimiento, con trazabilidad completa.'},
+  {id:'documentos', nombre:'Documentos', icono:IC.doc, desc:'Plan Quinquenal, planes de inversión, actas de la Comisión y lineamientos DETCE.'},
+  {id:'usuarios', nombre:'Usuarios', icono:IC.usr, soloAdmin:true}
+];
+
+/* ---------- Estado ---------- */
+let sesion = {token:null, usuario:null};
+let correoPendiente = '';
+let tReenvio = null;
+const memoria = {};
+function guardar(k,v){ try{ v==null ? localStorage.removeItem(k) : localStorage.setItem(k,v);}catch(e){ memoria[k]=v; } }
+function leer(k){ try{ return localStorage.getItem(k);}catch(e){ return memoria[k]||null; } }
+
+/* ---------- API (contrato JSON text/plain, sin preflight) ---------- */
+async function api(action, datos={}){
+  if(!API_URL || API_URL.startsWith('PEGAR')) throw new Error('Falta configurar la URL del servidor (API_URL).');
+  const r = await fetch(API_URL, {
+    method:'POST',
+    headers:{'Content-Type':'text/plain;charset=utf-8'},
+    body: JSON.stringify(Object.assign({action, token:sesion.token}, datos))
+  });
+  const j = await r.json();
+  if(j && j.sesion === false){ cerrarLocal(); mostrarMsg(j.error,'err'); }
+  return j;
+}
+
+/* ---------- Utilidades UI ---------- */
+const $ = id => document.getElementById(id);
+const esc = s => String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+function mostrarMsg(t,tipo){ const m=$('msgLogin'); m.textContent=t; m.className='msg '+tipo; }
+function ocultarMsg(){ $('msgLogin').className='msg oculto'; }
+function cargando(btn, on, texto){
+  btn.disabled = on;
+  btn.innerHTML = on ? '<span class="spin"></span> Procesando…' : texto;
+}
+
+/* ---------- Login ---------- */
+$('formCorreo').addEventListener('submit', async e=>{
+  e.preventDefault(); ocultarMsg();
+  const correo = $('correo').value.trim().toLowerCase();
+  if(!/^[a-z0-9._%+-]+@mep\.go\.cr$/.test(correo)){ mostrarMsg('Use su correo institucional @mep.go.cr.','err'); return; }
+  const b=$('btnEnviar'); cargando(b,true);
+  try{
+    const r = await api('solicitarCodigo',{correo});
+    if(!r.ok){ mostrarMsg(r.error,'err'); return; }
+    correoPendiente = correo;
+    $('correoMostrado').textContent = correo;
+    $('paso1').classList.add('oculto'); $('paso2').classList.remove('oculto');
+    mostrarMsg(r.mensaje,'ok'); $('codigo').value=''; $('codigo').focus();
+    iniciarReenvio();
+  }catch(err){ mostrarMsg(err.message || 'No se pudo conectar con el servidor.','err'); }
+  finally{ cargando(b,false,'Enviar código de acceso'); }
+});
+
+$('formCodigo').addEventListener('submit', async e=>{
+  e.preventDefault(); ocultarMsg();
+  const codigo = $('codigo').value.replace(/\D/g,'');
+  if(codigo.length!==6){ mostrarMsg('El código tiene 6 dígitos.','err'); return; }
+  const b=$('btnIngresar'); cargando(b,true);
+  try{
+    const r = await api('verificarCodigo',{correo:correoPendiente, codigo});
+    if(!r.ok){ mostrarMsg(r.error,'err'); return; }
+    sesion = {token:r.token, usuario:r.usuario};
+    guardar('ct_token', r.token);
+    entrar();
+  }catch(err){ mostrarMsg('No se pudo conectar con el servidor.','err'); }
+  finally{ cargando(b,false,'Ingresar'); }
+});
+
+$('codigo').addEventListener('input', e=>{ e.target.value = e.target.value.replace(/\D/g,'').slice(0,6); });
+
+$('btnOtro').addEventListener('click', ()=>{
+  clearInterval(tReenvio); ocultarMsg();
+  $('paso2').classList.add('oculto'); $('paso1').classList.remove('oculto'); $('correo').focus();
+});
+
+$('btnReenviar').addEventListener('click', async ()=>{
+  ocultarMsg();
+  try{
+    const r = await api('solicitarCodigo',{correo:correoPendiente});
+    mostrarMsg(r.ok ? 'Código reenviado.' : r.error, r.ok?'ok':'err');
+    if(r.ok) iniciarReenvio();
+  }catch(err){ mostrarMsg('No se pudo conectar con el servidor.','err'); }
+});
+
+function iniciarReenvio(){
+  let s=60; const b=$('btnReenviar'); b.disabled=true;
+  clearInterval(tReenvio);
+  b.textContent='Reenviar código ('+s+')';
+  tReenvio=setInterval(()=>{ s--; if(s<=0){ clearInterval(tReenvio); b.disabled=false; b.textContent='Reenviar código'; } else b.textContent='Reenviar código ('+s+')'; },1000);
+}
+
+$('btnSalir').addEventListener('click', async ()=>{
+  try{ await api('cerrarSesion'); }catch(e){}
+  cerrarLocal();
+});
+
+function cerrarLocal(){
+  sesion={token:null,usuario:null}; guardar('ct_token',null);
+  $('vistaApp').classList.add('oculto'); $('barraUsuario').classList.add('oculto');
+  $('vistaLogin').classList.remove('oculto');
+  $('paso2').classList.add('oculto'); $('paso1').classList.remove('oculto');
+}
+
+/* ---------- App ---------- */
+function entrar(){
+  $('vistaLogin').classList.add('oculto'); ocultarMsg();
+  $('vistaApp').classList.remove('oculto'); $('barraUsuario').classList.remove('oculto');
+  $('uNombre').textContent = sesion.usuario.nombre;
+  $('uRol').textContent = sesion.usuario.rol;
+  pintarMenu(); ir('inicio');
+}
+
+function esAdmin(){ return sesion.usuario && sesion.usuario.rol==='Administrador'; }
+
+function pintarMenu(){
+  const m=$('menu'); m.innerHTML='<div class="titulo-sec">Menú</div>';
+  MODULOS.filter(x=>!x.soloAdmin || esAdmin()).forEach(x=>{
+    const b=document.createElement('button');
+    b.className='nav-item'; b.dataset.id=x.id; b.innerHTML=x.icono+'<span>'+x.nombre+'</span>';
+    b.onclick=()=>ir(x.id); m.appendChild(b);
+  });
+}
+
+function ir(id){
+  document.querySelectorAll('.nav-item').forEach(b=>b.classList.toggle('activo', b.dataset.id===id));
+  const c=$('contenido');
+  if(id==='inicio') return vistaInicio(c);
+  if(id==='usuarios') return vistaUsuarios(c);
+  const mod = MODULOS.find(x=>x.id===id);
+  c.innerHTML = `<div class="encabezado"><h2>${mod.nombre}</h2><p>${mod.desc}</p></div>
+    <div class="panel"><span class="estado">En construcción</span><p style="margin-top:12px;color:var(--suave);font-size:14px">Este módulo se habilitará en la siguiente etapa del proyecto.</p></div>`;
+}
+
+function vistaInicio(c){
+  const h = new Date().getHours();
+  const saludo = h<12?'Buenos días':h<18?'Buenas tardes':'Buenas noches';
+  c.innerHTML = `<div class="encabezado"><h2>${saludo}, ${esc(sesion.usuario.nombre.split(' ')[0])}</h2>
+    <p>${esc(INSTITUCION)} · Panel de la Coordinación Técnica</p></div>
+    <div class="grid">${MODULOS.filter(x=>x.desc).map(x=>`
+      <div class="mod"><h3>${x.nombre}</h3><p>${x.desc}</p><span class="estado">En construcción</span></div>`).join('')}
+      ${esAdmin()?`<div class="mod"><h3>Usuarios</h3><p>Autorice o retire el acceso de docentes, Dirección, Junta y Contabilidad.</p><span class="estado listo">Disponible</span></div>`:''}
+    </div>`;
+}
+
+async function vistaUsuarios(c){
+  c.innerHTML = `<div class="encabezado"><h2>Usuarios autorizados</h2><p>Solo los correos de esta lista pueden ingresar a la plataforma.</p></div>
+    <div class="panel"><h3>Autorizar o editar acceso</h3>
+      <form id="formUsr" class="form-fila" novalidate>
+        <div><label for="uCorreo">Correo @mep.go.cr</label><input id="uCorreo" placeholder="nombre.apellido@mep.go.cr"></div>
+        <div><label for="uNombreIn">Nombre completo</label><input id="uNombreIn"></div>
+        <div><label for="uRolIn">Rol</label><select id="uRolIn"></select></div>
+        <div><label for="uActivo">Acceso</label><select id="uActivo"><option value="SI">Activo</option><option value="NO">Inactivo</option></select></div>
+        <button class="btn" type="submit" id="btnGuardarUsr">Guardar</button>
+      </form>
+      <div id="msgUsr" class="msg oculto"></div>
+    </div>
+    <div class="panel"><h3>Lista de usuarios</h3><div class="tabla-wrap" id="tablaUsr">Cargando…</div></div>`;
+  $('formUsr').addEventListener('submit', guardarUsr);
+  try{
+    const r = await api('listarUsuarios');
+    if(r.ok) pintarUsuarios(r); else $('tablaUsr').textContent = r.error;
+  }catch(e){ $('tablaUsr').textContent='No se pudo cargar la lista.'; }
+}
+
+let rolesCache=[];
+function pintarUsuarios(r){
+  rolesCache = r.roles;
+  $('uRolIn').innerHTML = r.roles.map(x=>`<option>${esc(x)}</option>`).join('');
+  $('uRolIn').value = 'Docente técnico';
+  $('tablaUsr').innerHTML = `<table><thead><tr><th>Nombre</th><th>Correo</th><th>Rol</th><th>Acceso</th><th>Último ingreso</th><th></th></tr></thead><tbody>
+    ${r.usuarios.map((u,i)=>`<tr><td>${esc(u.nombre)}</td><td>${esc(u.correo)}</td><td>${esc(u.rol)}</td>
+      <td><span class="tag ${u.activo==='SI'?'si':'no'}">${u.activo==='SI'?'Activo':'Inactivo'}</span></td>
+      <td>${esc(u.ultimoIngreso||'—')}</td><td><button class="btn-mini" data-i="${i}">Editar</button></td></tr>`).join('')}
+    </tbody></table>`;
+  $('tablaUsr').querySelectorAll('.btn-mini').forEach(b=>b.onclick=()=>{
+    const u=r.usuarios[b.dataset.i];
+    $('uCorreo').value=u.correo; $('uNombreIn').value=u.nombre; $('uRolIn').value=u.rol; $('uActivo').value=u.activo;
+    $('uNombreIn').focus();
+  });
+}
+
+async function guardarUsr(e){
+  e.preventDefault();
+  const m=$('msgUsr'); const b=$('btnGuardarUsr');
+  const datos={correo:$('uCorreo').value.trim().toLowerCase(), nombre:$('uNombreIn').value.trim(), rol:$('uRolIn').value, activo:$('uActivo').value};
+  if(!/^[a-z0-9._%+-]+@mep\.go\.cr$/.test(datos.correo)){ m.textContent='El correo debe ser @mep.go.cr.'; m.className='msg err'; return; }
+  if(!datos.nombre){ m.textContent='Indique el nombre completo.'; m.className='msg err'; return; }
+  cargando(b,true);
+  try{
+    const r = await api('guardarUsuario',{datos});
+    if(!r.ok){ m.textContent=r.error; m.className='msg err'; return; }
+    m.textContent='Guardado: '+datos.correo; m.className='msg ok';
+    $('formUsr').reset(); pintarUsuarios(r);
+  }catch(err){ m.textContent='No se pudo guardar.'; m.className='msg err'; }
+  finally{ cargando(b,false,'Guardar'); }
+}
+
+/* ---------- Arranque: reanudar sesión ---------- */
+(async function(){
+  $('subInstitucion').textContent = INSTITUCION + ' · Plataforma de Gestión';
+  const t = leer('ct_token');
+  if(!t) return;
+  sesion.token = t;
+  try{
+    const r = await api('sesion');
+    if(r.ok){ sesion.usuario = r.usuario; entrar(); } else cerrarLocal();
+  }catch(e){ /* sin servidor configurado: queda en login */ }
+})();
+</script>
+</body>
+</html>
